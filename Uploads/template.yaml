@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  UploadsStack
+
+  Sample SAM Template for UploadsStack
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    Tracing: Active
+  Api:
+    TracingEnabled: True
+
+Parameters:
+  VideoProcessingStateMachineArn:
+    Type: String
+
+Resources:
+  IngestBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub "video-ingest-${AWS::AccountId}-${AWS::Region}"
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: s3:ObjectCreated:*
+            Queue: !GetAtt NewUploadQueue.Arn
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+
+  QueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "s3.amazonaws.com"
+            Action:
+              - 'SQS:SendMessage'
+            Resource: !GetAtt NewUploadQueue.Arn
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Join [ "",[ 'arn:aws:s3:::', !Sub "video-ingest-${AWS::AccountId}-${AWS::Region}" ] ]
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Queues:
+        - !Ref NewUploadQueue
+
+  NewUploadQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      SqsManagedSseEnabled: True
+      QueueName: !Sub "new-upload-${AWS::AccountId}-${AWS::Region}"
+
+  NewUploadHandler:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: upload_handler/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Events:
+        NewVideoUpload:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt NewUploadQueue.Arn
+      Environment:
+        Variables:
+          VIDEO_PROCESSING_STEP_FUNCTION_ARN: !Ref VideoProcessingStateMachineArn
+      Policies:
+        - AmazonS3FullAccess
+        - AmazonRekognitionFullAccess
+#        - Statement:
+#            - Sid: PassSnsRolePolicy
+#              Effect: Allow
+#              Action:
+#                - iam:GetRole
+#                - iam:PassRole
+#              Resource: !GetAtt RekognitionRole.Arn
+
+#Outputs:
+#  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+#  # Find out more about other implicit resources you can reference within SAM
+#  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+#  HelloWorldApi:
+#    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+#    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+#  HelloWorldFunction:
+#    Description: "Hello World Lambda Function ARN"
+#    Value: !GetAtt HelloWorldFunction.Arn
+#  HelloWorldFunctionIamRole:
+#    Description: "Implicit IAM Role created for Hello World function"
+#    Value: !GetAtt HelloWorldFunctionRole.Arn

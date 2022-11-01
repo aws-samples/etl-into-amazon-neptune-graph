@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  VideoProcessing
+
+  Sample SAM Template for VideoProcessing
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+#Globals:
+#  Function:
+#    Tracing: Active
+#  Api:
+#    TracingEnabled: True
+
+Resources:
+  VideoIngestStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: VideoProcessing/template.yaml
+
+  UploadsStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: Uploads/template.yaml
+      Parameters:
+        VideoProcessingStateMachineArn: !GetAtt VideoIngestStack.Outputs.VideoProcessingStateMachineArn

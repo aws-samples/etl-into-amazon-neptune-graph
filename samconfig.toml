@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "graph-etl"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-pz21p0nup3g5"
+s3_prefix = "graph-etl"
+region = "us-west-2"
+capabilities = "CAPABILITY_AUTO_EXPAND CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+image_repositories = []
