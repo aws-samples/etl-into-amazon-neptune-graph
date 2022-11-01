@@ -18,41 +18,49 @@ Resources:
     Properties:
       DefinitionUri: statemachine/stock_trader.asl.json
       DefinitionSubstitutions:
-        StockCheckerFunctionArn: !GetAtt StockCheckerFunction.Arn
-        StockSellerFunctionArn: !GetAtt StockSellerFunction.Arn
+        StartRekognitionJobFunctionArn: !GetAtt StartRekognitionJobFunction.Arn
+        CheckRekognitionResultsFunctionArn: !GetAtt CheckRekognitionResultsFunction.Arn
         StockBuyerFunctionArn: !GetAtt StockBuyerFunction.Arn
         DDBPutItem: !Sub arn:${AWS::Partition}:states:::dynamodb:putItem
         DDBTable: !Ref TransactionTable
-#      Events:
-#        HourlyTradingSchedule:
-#          Type: Schedule # More info about Schedule Event Source: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-statemachine-schedule.html
-#          Properties:
-#            Description: Schedule to run the stock trading state machine every hour
-#            Enabled: False # This schedule is disabled by default to avoid incurring charges.
-#            Schedule: "rate(1 hour)"
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
-            FunctionName: !Ref StockCheckerFunction
+            FunctionName: !Ref StartRekognitionJobFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref StockSellerFunction
+            FunctionName: !Ref CheckRekognitionResultsFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref StockBuyerFunction
         - DynamoDBWritePolicy:
             TableName: !Ref TransactionTable
 
-  StockCheckerFunction:
+  StartRekognitionJobFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/stock_checker/
+      CodeUri: functions/start_label_detection/
       Handler: app.lambda_handler
       Runtime: python3.9
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          SNS_ROLE: !GetAtt RekognitionRole.Arn
+          SNS_TOPIC: !Ref LabelDetectionCompleteTopic
+      Policies:
+        - AmazonS3FullAccess
+        - AmazonRekognitionFullAccess
+        - AmazonSQSFullAccess
+        - Statement:
+            - Sid: PassSnsRolePolicy
+              Effect: Allow
+              Action:
+                - iam:GetRole
+                - iam:PassRole
+              Resource: !GetAtt RekognitionRole.Arn
 
-  StockSellerFunction:
+  CheckRekognitionResultsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/stock_seller/
+      CodeUri: functions/check_rek_results/
       Handler: app.lambda_handler
       Runtime: python3.9
       Architectures:
@@ -76,6 +84,33 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+
+  LabelDetectionCompleteTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "video-${AWS::AccountId}-${AWS::Region}"
+
+  RekognitionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: video_processing_topic_role
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      AssumeRolePolicyDocument: |
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "rekognition.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole",
+                    "Condition": {}
+                }
+            ]
+        }
 
 Outputs:
   # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine

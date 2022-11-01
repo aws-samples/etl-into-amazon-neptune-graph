@@ -11,7 +11,7 @@ tracer = Tracer()
 metrics = Metrics()
 
 s3 = boto3.client('s3')
-rek = boto3.client('rekognition')
+step_functions = boto3.client("stepfunctions")
 
 @metrics.log_metrics(capture_cold_start_metric=True)
 @logger.inject_lambda_context(log_event=True)
@@ -22,7 +22,7 @@ def lambda_handler(event, context):
     # task_failed = False
 
     print(f"Preparing to trigger: {step_function_arn}")
-
+    responses = []
     for record in event["Records"]:
         payload = json.loads(record['body'])
         logger.info(f"Payload: %s", payload)
@@ -33,22 +33,21 @@ def lambda_handler(event, context):
             key = payload_record["s3"]["object"]["key"]
             logger.info("Bucket: %s", bucket)
             logger.info("Key: %s", key)
-            # response = rek.start_label_detection(
-            #     Video={
-            #         'S3Object': {
-            #             'Bucket': bucket,
-            #             'Name': key
-            #         }
-            #     },
-            #     NotificationChannel={
-            #         'SNSTopicArn': task_complete_topic,
-            #         'RoleArn': sns_role
-            #     },
-            #     ClientRequestToken=key.strip(".mp4")
-            # )
-            # logger.info("Rekognition Label Detection job submitted for %s", key)
-            # logger.info("Response: %s", response)
-            # except:
-            #     task_failed = True
-            #     logger.info("Failed to submit video object detection job")
-    # return not task_failed
+            state = {
+                "bucket": bucket,
+                "key": key
+            }
+            response = step_functions.start_execution(
+                stateMachineArn=step_function_arn,
+                input=json.dumps(state),
+                name=key
+            )
+            print(response)
+            responses.append(response)
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({
+            "message": "State Machine Executions Started"
+        }),
+    }

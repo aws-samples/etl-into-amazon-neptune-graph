@@ -83,13 +83,7 @@ Resources:
       Policies:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
-#        - Statement:
-#            - Sid: PassSnsRolePolicy
-#              Effect: Allow
-#              Action:
-#                - iam:GetRole
-#                - iam:PassRole
-#              Resource: !GetAtt RekognitionRole.Arn
+        - AWSStepFunctionsFullAccess
 
 #Outputs:
 #  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

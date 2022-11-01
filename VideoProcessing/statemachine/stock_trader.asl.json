@@ -1,10 +1,10 @@
 {
     "Comment": "A state machine that does mock stock trading.",
-    "StartAt": "Check Stock Value",
+    "StartAt": "Rekognition Label Detection",
     "States": {
-        "Check Stock Value": {
+        "Rekognition Label Detection": {
             "Type": "Task",
-            "Resource": "${StockCheckerFunctionArn}",
+            "Resource": "${StartRekognitionJobFunctionArn}",
             "Retry": [
                 {
                     "ErrorEquals": [
@@ -30,7 +30,7 @@
         },
         "Sell Stock": {
             "Type": "Task",
-            "Resource": "${StockSellerFunctionArn}",
+            "Resource": "${CheckRekognitionResultsFunctionArn}",
             "Retry": [
                 {
                     "ErrorEquals": [
