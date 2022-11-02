@@ -4,7 +4,7 @@
   "States" : {
     "Rekognition Label Detection" : {
       "Type" : "Task",
-      "Resource" : "arn:aws:lambda:us-west-2:200608916304:function:graph-etl-VideoIngestStac-StartRekognitionJobFunct-Hr4qwC6LZ1uh",
+      "Resource" : "${StartRekognitionJobFunctionArn}",
       "Retry" : [ {
         "ErrorEquals" : [ "States.TaskFailed" ],
         "IntervalSeconds" : 15,
@@ -20,7 +20,7 @@
       },
     "Get Job Status" : {
       "Type" : "Task",
-      "Resource" : "arn:aws:lambda:us-west-2:200608916304:function:graph-etl-VideoIngestStac-CheckRekognitionResultsF-8krsSwI6PfUr",
+      "Resource" : "${CheckRekognitionResultsFunctionArn}",
       "Retry" : [ {
         "ErrorEquals" : [ "States.TaskFailed" ],
         "IntervalSeconds" : 2,
@@ -40,11 +40,22 @@
           {
             "Variable": "$.LabelDetectionComplete",
             "StringEquals": "SUCCEEDED",
-            "Next": "Job Complete"
+            "Next": "Create Graph Load Files"
           }
         ],
         "Default": "Wait 10 Seconds"
       },
+    "Create Graph Load Files": {
+      "Type" : "Task",
+      "Resource" : "${CreateGraphLoadFilesFunctionArn}",
+      "Retry" : [ {
+        "ErrorEquals" : [ "States.TaskFailed" ],
+        "IntervalSeconds" : 2,
+        "MaxAttempts" : 3,
+        "BackoffRate" : 1
+      } ],
+      "Next": "Job Complete"
+    },
     "Job Complete": {
       "Type": "Pass",
       "End" : true

@@ -20,11 +20,14 @@ Resources:
       DefinitionSubstitutions:
         StartRekognitionJobFunctionArn: !GetAtt StartRekognitionJobFunction.Arn
         CheckRekognitionResultsFunctionArn: !GetAtt CheckRekognitionResultsFunction.Arn
+        CreateGraphLoadFilesFunctionArn: !GetAtt CreateGraphLoadFilesFunction.Arn
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref StartRekognitionJobFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckRekognitionResultsFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CreateGraphLoadFilesFunction
 
   StartRekognitionJobFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -62,6 +65,20 @@ Resources:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
 
+  CreateGraphLoadFilesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/create_graph_load_files/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Policies:
+        - AmazonS3FullAccess
+      Environment:
+        Variables:
+          GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
+
   LabelDetectionCompleteTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -88,6 +105,22 @@ Resources:
                 }
             ]
         }
+
+  GraphLoadStagingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub "graph-load-staging-${AWS::AccountId}-${AWS::Region}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
 
 Outputs:
   # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
