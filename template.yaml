@@ -16,7 +16,7 @@ Resources:
   GraphStack:
     Type: AWS::Serverless::Application
     Properties:
-      Location: Graph/template.yaml
+      Location: https://aws-neptune-customer-samples.s3.amazonaws.com/v2/cloudformation-templates/neptune-ml-nested-stack.json
 
   VideoIngestStack:
     Type: AWS::Serverless::Application
