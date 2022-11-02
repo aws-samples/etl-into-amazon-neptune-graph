@@ -16,22 +16,15 @@ Resources:
   VideoProcessingStateMachine:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
-      DefinitionUri: statemachine/stock_trader.asl.json
+      DefinitionUri: statemachine/video_processing.asl.json
       DefinitionSubstitutions:
         StartRekognitionJobFunctionArn: !GetAtt StartRekognitionJobFunction.Arn
         CheckRekognitionResultsFunctionArn: !GetAtt CheckRekognitionResultsFunction.Arn
-        StockBuyerFunctionArn: !GetAtt StockBuyerFunction.Arn
-        DDBPutItem: !Sub arn:${AWS::Partition}:states:::dynamodb:putItem
-        DDBTable: !Ref TransactionTable
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref StartRekognitionJobFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckRekognitionResultsFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref StockBuyerFunction
-        - DynamoDBWritePolicy:
-            TableName: !Ref TransactionTable
 
   StartRekognitionJobFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -68,25 +61,6 @@ Resources:
       Policies:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
-
-  StockBuyerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/stock_buyer/
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - x86_64
-
-  TransactionTable:
-    Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
-    Properties:
-      PrimaryKey:
-        Name: Id
-        Type: String
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
 
   LabelDetectionCompleteTopic:
     Type: AWS::SNS::Topic

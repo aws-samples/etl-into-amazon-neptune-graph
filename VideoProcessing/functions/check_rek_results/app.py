@@ -5,11 +5,8 @@ import boto3
 
 rek = boto3.client("rekognition")
 def lambda_handler(event, context):
-    """Sample Lambda function which mocks the operation of selling a random number
-    of shares for a stock.
+    """Recevies label detection data for rekognition job_id from the event
 
-    For demonstration purposes, this Lambda function does not actually perform any 
-    actual transactions. It simply returns a mocked result.
 
     Parameters
     ----------
@@ -21,7 +18,7 @@ def lambda_handler(event, context):
 
     Returns
     ------
-        dict: Object containing details of the stock selling transaction
+        dict: Object containing details of the video processing job
     """
 
     print(event)
