@@ -1,8 +1,9 @@
 from datetime import datetime
 from random import randint
 from uuid import uuid4
+import boto3
 
-
+rek = boto3.client("rekognition")
 def lambda_handler(event, context):
     """Sample Lambda function which mocks the operation of selling a random number
     of shares for a stock.
@@ -22,16 +23,11 @@ def lambda_handler(event, context):
     ------
         dict: Object containing details of the stock selling transaction
     """
-    # Get the price of the stock provided as input
-    stock_price = event["stock_price"]
-    # Mocked result of a stock selling transaction
-    transaction_result = {
-        "id": str(uuid4()),  # Unique ID for the transaction
-        "price": str(stock_price),  # Price of each share
-        "type": "sell",  # Type of transaction (buy/sell)
-        "qty": str(
-            randint(1, 10)
-        ),  # Number of shares bought/sold (We are mocking this as a random integer between 1 and 10)
-        "timestamp": datetime.now().isoformat(),  # Timestamp of the when the transaction was completed
-    }
-    return transaction_result
+
+    print(event)
+
+    job_id = event["job_id"]
+    response = rek.get_label_detection(JobId=job_id)
+    event["LabelDetectionComplete"] = response["JobStatus"]
+    event["LabelDetectionData"] = response
+    return event

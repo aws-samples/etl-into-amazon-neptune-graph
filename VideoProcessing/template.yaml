@@ -65,6 +65,9 @@ Resources:
       Runtime: python3.9
       Architectures:
         - x86_64
+      Policies:
+        - AmazonS3FullAccess
+        - AmazonRekognitionFullAccess
 
   StockBuyerFunction:
     Type: AWS::Serverless::Function
