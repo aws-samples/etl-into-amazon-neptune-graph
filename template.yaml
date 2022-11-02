@@ -13,6 +13,11 @@ Description: >
 #    TracingEnabled: True
 
 Resources:
+  GraphStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: Graph/template.yaml
+
   VideoIngestStack:
     Type: AWS::Serverless::Application
     Properties:
