@@ -22,6 +22,13 @@ Resources:
     Type: AWS::Serverless::Application
     Properties:
       Location: VideoProcessing/template.yaml
+      Parameters:
+        NeptuneLoadFromS3IAMRoleArn: !GetAtt GraphStack.Outputs.NeptuneLoadFromS3IAMRoleArn
+        NeptuneEndpoint: !GetAtt GraphStack.Outputs.DBClusterEndpoint
+        NeptuneLoaderEndpoint: !GetAtt GraphStack.Outputs.LoaderEndpoint
+        NeptunePort: !GetAtt GraphStack.Outputs.DBClusterPort
+        NeptuneSubnet: !GetAtt GraphStack.Outputs.Subnet1
+        NeptuneSecurityGroup: !GetAtt GraphStack.Outputs.NeptuneSecurityGroup
 
   UploadsStack:
     Type: AWS::Serverless::Application
@@ -29,3 +36,8 @@ Resources:
       Location: Uploads/template.yaml
       Parameters:
         VideoProcessingStateMachineArn: !GetAtt VideoIngestStack.Outputs.VideoProcessingStateMachineArn
+
+Outputs:
+  NeptuneLoadFromS3IAMRoleArn:
+    Description: The role used to load data from s3
+    Value: !GetAtt GraphStack.Outputs.NeptuneLoadFromS3IAMRoleArn

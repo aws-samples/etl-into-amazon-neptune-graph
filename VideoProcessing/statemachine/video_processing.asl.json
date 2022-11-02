@@ -54,6 +54,17 @@
         "MaxAttempts" : 3,
         "BackoffRate" : 1
       } ],
+      "Next": "Load to Graph"
+    },
+    "Load to Graph": {
+      "Type" : "Task",
+      "Resource" : "${LoadToGraphFunctionArn}",
+      "Retry" : [ {
+        "ErrorEquals" : [ "States.TaskFailed" ],
+        "IntervalSeconds" : 2,
+        "MaxAttempts" : 3,
+        "BackoffRate" : 1
+      } ],
       "Next": "Job Complete"
     },
     "Job Complete": {

@@ -12,6 +12,20 @@ Globals:
   Api:
     TracingEnabled: True
 
+Parameters:
+  NeptuneLoadFromS3IAMRoleArn:
+    Type: String
+  NeptuneEndpoint: # todo: purge, not using
+    Type: String
+  NeptuneLoaderEndpoint:
+    Type: String
+  NeptunePort: # todo: purge, not using
+    Type: String
+  NeptuneSubnet:
+    Type: String
+  NeptuneSecurityGroup:
+    Type: String
+
 Resources:
   VideoProcessingStateMachine:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
@@ -21,6 +35,7 @@ Resources:
         StartRekognitionJobFunctionArn: !GetAtt StartRekognitionJobFunction.Arn
         CheckRekognitionResultsFunctionArn: !GetAtt CheckRekognitionResultsFunction.Arn
         CreateGraphLoadFilesFunctionArn: !GetAtt CreateGraphLoadFilesFunction.Arn
+        LoadToGraphFunctionArn: !GetAtt LoadToGraphFunction.Arn
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref StartRekognitionJobFunction
@@ -28,6 +43,8 @@ Resources:
             FunctionName: !Ref CheckRekognitionResultsFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CreateGraphLoadFilesFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref LoadToGraphFunction
 
   StartRekognitionJobFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -78,6 +95,27 @@ Resources:
       Environment:
         Variables:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
+
+  LoadToGraphFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/load_to_graph/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+#      Policies:
+#        - AmazonS3FullAccess
+      Environment:
+        Variables:
+          NEPTUNE_LOADER_ENDPOINT: !Ref NeptuneLoaderEndpoint
+          NEPTUNE_LOAD_ROLE_ARN: !Ref NeptuneLoadFromS3IAMRoleArn
+#          AWS_REGION: !Ref AWS::Region
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref NeptuneSecurityGroup
+        SubnetIds:
+          - !Ref NeptuneSubnet
 
   LabelDetectionCompleteTopic:
     Type: AWS::SNS::Topic

@@ -70,7 +70,7 @@ class GraphLoadFiles:
             labels = [it["Label"] for it in self.nodes_by_timestamp[timestamp]]
             for label in labels:
                 self.create_node(label)
-                self.create_edge(label, video_node, "APPEARS_IN")
+                self.create_edge(label, root_node, "APPEARS_IN")
             for e1, e2 in itertools.combinations(labels, 2):
                 self.create_edge(e1, e2, "APPEARS_WITH")
 
@@ -121,7 +121,10 @@ def lambda_handler(event, context):
     }
 
     # Wrtie node and edge files from detected labels
+    labels = event["LabelDetectionData"]["Labels"]
+
     gl = GraphLoadFiles(event["key"])
+    nodes_by_timestamp = gl.sort_labels_by_timestamp(labels)
     gl.create_nodes_and_edges(video_node)
     nodes_file = gl.write_nodes()
     edges_file = gl.write_edges()
