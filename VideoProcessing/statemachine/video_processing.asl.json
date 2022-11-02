@@ -1,36 +1,53 @@
 {
-    "Comment": "A state machine that does mock stock trading.",
-    "StartAt": "Rekognition Label Detection",
-    "States": {
-        "Rekognition Label Detection": {
-            "Type": "Task",
-            "Resource": "${StartRekognitionJobFunctionArn}",
-            "Retry": [
-                {
-                    "ErrorEquals": [
-                        "States.TaskFailed"
-                    ],
-                    "IntervalSeconds": 15,
-                    "MaxAttempts": 5,
-                    "BackoffRate": 1.5
-                }
-            ],
-            "Next": "Check Job Status"
-        },
-        "Check Job Status": {
-            "Type": "Task",
-            "Resource": "${CheckRekognitionResultsFunctionArn}",
-            "Retry": [
-                {
-                    "ErrorEquals": [
-                        "States.TaskFailed"
-                    ],
-                    "IntervalSeconds": 2,
-                    "MaxAttempts": 3,
-                    "BackoffRate": 1
-                }
-            ],
-            "End": true
-        },
+  "Comment" : "A state machine that does mock stock trading.",
+  "StartAt" : "Rekognition Label Detection",
+  "States" : {
+    "Rekognition Label Detection" : {
+      "Type" : "Task",
+      "Resource" : "arn:aws:lambda:us-west-2:200608916304:function:graph-etl-VideoIngestStac-StartRekognitionJobFunct-Hr4qwC6LZ1uh",
+      "Retry" : [ {
+        "ErrorEquals" : [ "States.TaskFailed" ],
+        "IntervalSeconds" : 15,
+        "MaxAttempts" : 5,
+        "BackoffRate" : 1.5
+      } ],
+      "Next" : "Wait 10 Seconds"
+    },
+    "Wait 10 Seconds": {
+        "Type": "Wait",
+        "Seconds": 10,
+        "Next": "Get Job Status"
+      },
+    "Get Job Status" : {
+      "Type" : "Task",
+      "Resource" : "arn:aws:lambda:us-west-2:200608916304:function:graph-etl-VideoIngestStac-CheckRekognitionResultsF-8krsSwI6PfUr",
+      "Retry" : [ {
+        "ErrorEquals" : [ "States.TaskFailed" ],
+        "IntervalSeconds" : 2,
+        "MaxAttempts" : 3,
+        "BackoffRate" : 1
+      } ],
+      "Next": "Is Job Complete?"
+    },
+    "Is Job Complete?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.LabelDetectionComplete",
+            "StringEquals": "IN_PROGRESS",
+            "Next": "Wait 10 Seconds"
+          },
+          {
+            "Variable": "$.LabelDetectionComplete",
+            "StringEquals": "SUCCEEDED",
+            "Next": "Job Complete"
+          }
+        ],
+        "Default": "Wait 10 Seconds"
+      },
+    "Job Complete": {
+      "Type": "Pass",
+      "End" : true
     }
+  }
 }
