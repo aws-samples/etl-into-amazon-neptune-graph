@@ -27,9 +27,9 @@
         "MaxAttempts" : 3,
         "BackoffRate" : 1
       } ],
-      "Next": "Is Job Complete?"
+      "Next": "Is Get Labels Job Complete?"
     },
-    "Is Job Complete?": {
+    "Is Get Labels Job Complete?": {
         "Type": "Choice",
         "Choices": [
           {
