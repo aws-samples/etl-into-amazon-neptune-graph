@@ -1,7 +1,3 @@
-from datetime import datetime
-from random import randint
-from uuid import uuid4
-import boto3
 import os
 import requests
 import json
@@ -10,7 +6,6 @@ neptune_loader_endpoint = os.environ["NEPTUNE_LOADER_ENDPOINT"]
 neptune_loader_role = os.environ["NEPTUNE_LOAD_ROLE_ARN"]
 aws_region = os.environ["AWS_REGION"]
 
-rek = boto3.client("rekognition")
 def lambda_handler(event, context):
     """loads data to neptune from s3
 

@@ -81,8 +81,8 @@ Resources:
         Variables:
           VIDEO_PROCESSING_STEP_FUNCTION_ARN: !Ref VideoProcessingStateMachineArn
       Policies:
-        - AmazonS3FullAccess
-        - AmazonRekognitionFullAccess
+#        - AmazonS3FullAccess
+#        - AmazonRekognitionFullAccess
         - AWSStepFunctionsFullAccess
 
 #Outputs:

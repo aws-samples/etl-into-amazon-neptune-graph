@@ -52,6 +52,7 @@ Resources:
       CodeUri: functions/start_label_detection/
       Handler: app.lambda_handler
       Runtime: python3.9
+      Timeout: 15
       Architectures:
         - x86_64
       Environment:
@@ -76,6 +77,7 @@ Resources:
       CodeUri: functions/check_rek_results/
       Handler: app.lambda_handler
       Runtime: python3.9
+      Timeout: 60
       Architectures:
         - x86_64
       Policies:
@@ -88,6 +90,7 @@ Resources:
       CodeUri: functions/create_graph_load_files/
       Handler: app.lambda_handler
       Runtime: python3.9
+      Timeout: 600
       Architectures:
         - x86_64
       Policies:
@@ -102,6 +105,7 @@ Resources:
       CodeUri: functions/load_to_graph/
       Handler: app.lambda_handler
       Runtime: python3.9
+      Timeout: 60
       Architectures:
         - x86_64
 #      Policies:
