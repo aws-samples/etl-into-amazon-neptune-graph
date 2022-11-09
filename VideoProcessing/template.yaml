@@ -130,7 +130,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSNSFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
-      AssumeRolePolicyDocument: |
+      AssumeRolePolicyDocument: 
         {
             "Version": "2012-10-17",
             "Statement": [

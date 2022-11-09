@@ -134,7 +134,7 @@ def lambda_handler(event, context):
     # upload node and edge files to s3
     for outfile in [nodes_file, edges_file]:
         s3.upload_file(
-            Filename=os.path.join("/tmp", outfile),
+            Filename=os.path.join("/", "tmp", outfile),
             Bucket=graph_load_staging_bucket,
             Key=outfile,
         )
