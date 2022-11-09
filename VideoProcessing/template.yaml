@@ -126,7 +126,7 @@ Resources:
   RekognitionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "video_processing_topic_role-{AWS::Region}"
+      RoleName: !Sub "video_processing_topic_role_${AWS::Region}"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSNSFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
@@ -145,9 +145,47 @@ Resources:
             ]
         }
 
+  GraphLoadLoggingBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      AccessControl: "LogDeliveryWrite"
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  GraphLoadLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref GraphLoadLoggingBucket
+      PolicyDocument:
+        Statement:
+          - Effect: "Deny"
+            Action: "s3:*"
+            Principal: "*"
+            Resource:
+              - !Sub "${GraphLoadLoggingBucket.Arn}/*"
+              - !GetAtt GraphLoadLoggingBucket.Arn
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
   GraphLoadStagingBucket:
     Type: AWS::S3::Bucket
     Properties:
+      LoggingConfiguration:
+        DestinationBucketName:
+          !Ref GraphLoadLoggingBucket
+        LogFilePrefix: "artifacts-logs"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
