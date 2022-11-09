@@ -11,7 +11,7 @@ phases:
       - . ./assume-role.sh ${ENV_PIPELINE_EXECUTION_ROLE} deploy
       - sam deploy --stack-name ${ENV_STACK_NAME}
                     --template ${ENV_TEMPLATE}
-                    --capabilities CAPABILITY_IAM
+                    --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM CAPABILITY_NAMED_IAM
                     --region ${ENV_REGION}
                     --s3-bucket ${ENV_BUCKET}
                     --no-fail-on-empty-changeset
