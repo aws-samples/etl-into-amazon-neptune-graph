@@ -108,13 +108,10 @@ Resources:
       Timeout: 60
       Architectures:
         - x86_64
-#      Policies:
-#        - AmazonS3FullAccess
       Environment:
         Variables:
           NEPTUNE_LOADER_ENDPOINT: !Ref NeptuneLoaderEndpoint
           NEPTUNE_LOAD_ROLE_ARN: !Ref NeptuneLoadFromS3IAMRoleArn
-#          AWS_REGION: !Ref AWS::Region
       VpcConfig:
         SecurityGroupIds:
           - !Ref NeptuneSecurityGroup
