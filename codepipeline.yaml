@@ -342,8 +342,8 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName:
           !Ref PipelineArtifactsLoggingBucket
-      PublicAccessBlockConfiguration:
         LogFilePrefix: "artifacts-logs"
+      PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
         IgnorePublicAcls: True
@@ -387,7 +387,6 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
       PublicAccessBlockConfiguration:
-        LogFilePrefix: "artifacts-logs"
         BlockPublicAcls: True
         BlockPublicPolicy: True
         IgnorePublicAcls: True
