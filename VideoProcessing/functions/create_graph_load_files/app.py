@@ -45,7 +45,8 @@ class GraphLoadFiles:
 
     def get_node_id(self, node):
         node_name = node["Name"]
-        m = hashlib.new('md5')
+        m = hashlib.new('md5',
+            usedforsecurity=False)
         m.update(node_name.encode())
         node_id = m.hexdigest()
         return node_id
@@ -79,7 +80,7 @@ class GraphLoadFiles:
         outfile_path = f"{self.source_name}-nodes.csv"
         node_columns = [":ID", ":Label", "confidence:Float"]
         print(f"Node Columns: {node_columns}")
-        with open(os.path.join("/tmp", outfile_path), "w") as output_file:
+        with open(os.path.join("/", "tmp", outfile_path), "w") as output_file:
             dict_writer = csv.DictWriter(output_file, node_columns)
             dict_writer.writeheader()
             dict_writer.writerows(self.nodes)
@@ -89,7 +90,7 @@ class GraphLoadFiles:
         outfile_path = f"{self.source_name}-edges.csv"
         edge_columns = [":ID", ":START_ID", ":END_ID", ":TYPE"]
         print(f"Edge Columns: {edge_columns}")
-        with open(os.path.join("/tmp", outfile_path), "w") as output_file:
+        with open(os.path.join("/", "tmp", outfile_path), "w") as output_file:
             dict_writer = csv.DictWriter(output_file, edge_columns)
             dict_writer.writeheader()
             dict_writer.writerows(self.edges)
