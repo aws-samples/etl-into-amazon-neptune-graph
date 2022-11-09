@@ -342,7 +342,12 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName:
           !Ref PipelineArtifactsLoggingBucket
+      PublicAccessBlockConfiguration:
         LogFilePrefix: "artifacts-logs"
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -381,6 +386,12 @@ Resources:
       AccessControl: "LogDeliveryWrite"
       VersioningConfiguration:
         Status: Enabled
+      PublicAccessBlockConfiguration:
+        LogFilePrefix: "artifacts-logs"
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
