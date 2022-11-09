@@ -52,7 +52,8 @@ class GraphLoadFiles:
 
     def get_edge_id(self, node1, node2, edge_type):
         estring = f"{node1['Name']}-{edge_type}-{node2['Name']}"
-        m = hashlib.new('md5')
+        m = hashlib.new('md5', 
+            usedforsecurity=False)
         m.update(estring.encode())
         edge_id = m.hexdigest()
         return edge_id
