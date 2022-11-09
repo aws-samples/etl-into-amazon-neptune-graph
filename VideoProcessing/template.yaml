@@ -126,7 +126,7 @@ Resources:
   RekognitionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: video_processing_topic_role
+      RoleName: !Sub "video_processing_topic_role-{AWS::Region}"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSNSFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
