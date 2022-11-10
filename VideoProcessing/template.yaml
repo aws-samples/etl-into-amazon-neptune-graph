@@ -68,6 +68,12 @@ Resources:
       KeySpec: SYMMETRIC_DEFAULT
       KeyUsage: ENCRYPT_DECRYPT
 
+  VideoProcessingDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref VideoMasterKmsKey
+      QueueName: !Sub "video-processing-dead-letter-queue-${AWS::AccountId}-${AWS::Region}"
+
   StartRekognitionJobFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -75,6 +81,9 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
+      DeadLetterQueue:
+        TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
+        Type: SQS
       ReservedConcurrentExecutions: 1
       Timeout: 15
       Architectures:
@@ -94,6 +103,9 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
+      DeadLetterQueue:
+        TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
+        Type: SQS
       ReservedConcurrentExecutions: 1
       Timeout: 60
       Architectures:
@@ -110,6 +122,9 @@ Resources:
       Runtime: python3.9
       KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
+      DeadLetterQueue:
+        TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
+        Type: SQS
       Timeout: 600
       Architectures:
         - x86_64
@@ -128,6 +143,9 @@ Resources:
       Timeout: 60
       KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
+      DeadLetterQueue:
+        TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
+        Type: SQS
       Architectures:
         - x86_64
       Environment:

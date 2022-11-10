@@ -103,10 +103,17 @@ Resources:
       KmsMasterKeyId: !Ref UploadsMasterKmsKey
       QueueName: !Sub "new-upload-${AWS::AccountId}-${AWS::Region}"
 
+  UploadsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref UploadsMasterKmsKey
+      QueueName: !Sub "uploads-dead-letter-queue-${AWS::AccountId}-${AWS::Region}"
+
   UploadsMasterKmsKey:
     Type: AWS::KMS::Key
     Properties:
       Enabled: true
+      EnableKeyRotation: true
       KeyPolicy:
         Version: 2012-10-17
         Id: key-default-1
@@ -132,6 +139,9 @@ Resources:
       Runtime: python3.9
       KmsKeyArn: !GetAtt UploadsMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
+      DeadLetterQueue:
+        TargetArn: !GetAtt UploadsDeadLetterQueue.Arn
+        Type: SQS
       Architectures:
         - x86_64
       Events:
