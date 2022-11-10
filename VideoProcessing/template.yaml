@@ -46,12 +46,34 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref LoadToGraphFunction
 
+  LabelDetectionTopicKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Enabled: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-default-1
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':root'
+            Action: 'kms:*'
+            Resource: '*'
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+
   StartRekognitionJobFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/start_label_detection/
       Handler: app.lambda_handler
       Runtime: python3.9
+      KmsKeyArn: !GetAtt LabelDetectionTopicKmsKey.Arn
       Timeout: 15
       Architectures:
         - x86_64
@@ -77,6 +99,7 @@ Resources:
       CodeUri: functions/check_rek_results/
       Handler: app.lambda_handler
       Runtime: python3.9
+      KmsKeyArn: !GetAtt LabelDetectionTopicKmsKey.Arn
       Timeout: 60
       Architectures:
         - x86_64
@@ -90,6 +113,7 @@ Resources:
       CodeUri: functions/create_graph_load_files/
       Handler: app.lambda_handler
       Runtime: python3.9
+      KmsKeyArn: !GetAtt LabelDetectionTopicKmsKey.Arn
       Timeout: 600
       Architectures:
         - x86_64
@@ -106,7 +130,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       Timeout: 60
-#      KmsKeyArn: "alias/aws/lambda"
+      KmsKeyArn: !GetAtt LabelDetectionTopicKmsKey.Arn
       Architectures:
         - x86_64
       Environment:
@@ -118,24 +142,6 @@ Resources:
           - !Ref NeptuneSecurityGroup
         SubnetIds:
           - !Ref NeptuneSubnet
-
-#  LabelDetectionTopicKmsKey:
-#    Type: AWS::KMS::Key
-#    Properties:
-#      Enabled: true
-#      KeyPolicy:
-#        - !Sub |
-#          {
-#            "Sid": "Enable IAM policies",
-#            "Effect": "Allow",
-#            "Principal": {
-#              "AWS": "arn:aws:iam::${AWS::AccountId}:root"
-#            },
-#            "Action": "kms:*",
-#            "Resource": "*"
-#          }
-#      KeySpec: SYMMETRIC_DEFAULT
-#      KeyUsage: ENCRYPT_DECRYPT
 
   LabelDetectionCompleteTopic:
     Type: AWS::SNS::Topic
