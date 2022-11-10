@@ -74,6 +74,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
+      ReservedConcurrentExecutions: 1
       Timeout: 15
       Architectures:
         - x86_64
@@ -100,6 +101,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
+      ReservedConcurrentExecutions: 1
       Timeout: 60
       Architectures:
         - x86_64
@@ -114,6 +116,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
+      ReservedConcurrentExecutions: 1
       Timeout: 600
       Architectures:
         - x86_64
@@ -131,6 +134,7 @@ Resources:
       Runtime: python3.9
       Timeout: 60
       KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
+      ReservedConcurrentExecutions: 1
       Architectures:
         - x86_64
       Environment:

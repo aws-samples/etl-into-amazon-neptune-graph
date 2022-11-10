@@ -131,6 +131,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       KmsKeyArn: !GetAtt UploadsFunctionEnvVarKmsKey.Arn
+      ReservedConcurrentExecutions: 1
       Architectures:
         - x86_64
       Events:
