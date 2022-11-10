@@ -103,12 +103,34 @@ Resources:
       SqsManagedSseEnabled: True
       QueueName: !Sub "new-upload-${AWS::AccountId}-${AWS::Region}"
 
+  UploadsFunctionEnvVarKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Enabled: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-default-1
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':root'
+            Action: 'kms:*'
+            Resource: '*'
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+
   NewUploadHandler:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: upload_handler/
       Handler: app.lambda_handler
       Runtime: python3.9
+      KmsKeyArn: !GetAtt UploadsFunctionEnvVarKmsKey.Arn
       Architectures:
         - x86_64
       Events:

@@ -46,7 +46,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref LoadToGraphFunction
 
-  LabelDetectionTopicKmsKey:
+  FunctionEnvVarKmsKey:
     Type: AWS::KMS::Key
     Properties:
       Enabled: true
@@ -73,7 +73,7 @@ Resources:
       CodeUri: functions/start_label_detection/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt LabelDetectionTopicKmsKey.Arn
+      KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
       Timeout: 15
       Architectures:
         - x86_64
@@ -99,7 +99,7 @@ Resources:
       CodeUri: functions/check_rek_results/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt LabelDetectionTopicKmsKey.Arn
+      KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
       Timeout: 60
       Architectures:
         - x86_64
@@ -113,7 +113,7 @@ Resources:
       CodeUri: functions/create_graph_load_files/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt LabelDetectionTopicKmsKey.Arn
+      KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
       Timeout: 600
       Architectures:
         - x86_64
@@ -130,7 +130,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       Timeout: 60
-      KmsKeyArn: !GetAtt LabelDetectionTopicKmsKey.Arn
+      KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
       Architectures:
         - x86_64
       Environment:
