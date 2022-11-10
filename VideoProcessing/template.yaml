@@ -106,6 +106,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       Timeout: 60
+#      KmsKeyArn: "alias/aws/lambda"
       Architectures:
         - x86_64
       Environment:
@@ -118,10 +119,29 @@ Resources:
         SubnetIds:
           - !Ref NeptuneSubnet
 
+#  LabelDetectionTopicKmsKey:
+#    Type: AWS::KMS::Key
+#    Properties:
+#      Enabled: true
+#      KeyPolicy:
+#        - !Sub |
+#          {
+#            "Sid": "Enable IAM policies",
+#            "Effect": "Allow",
+#            "Principal": {
+#              "AWS": "arn:aws:iam::${AWS::AccountId}:root"
+#            },
+#            "Action": "kms:*",
+#            "Resource": "*"
+#          }
+#      KeySpec: SYMMETRIC_DEFAULT
+#      KeyUsage: ENCRYPT_DECRYPT
+
   LabelDetectionCompleteTopic:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: !Sub "video-${AWS::AccountId}-${AWS::Region}"
+      KmsMasterKeyId: "alias/aws/sns"
 
   RekognitionRole:
     Type: AWS::IAM::Role
