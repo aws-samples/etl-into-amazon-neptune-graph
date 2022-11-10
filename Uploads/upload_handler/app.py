@@ -19,7 +19,8 @@ step_functions = boto3.client("stepfunctions")
 def lambda_handler(event, context):
     logger.info("Received event: %s", event)
 
-    # task_failed = False
+    # task_failed = False'
+
 
     print(f"Preparing to trigger: {step_function_arn}")
     responses = []

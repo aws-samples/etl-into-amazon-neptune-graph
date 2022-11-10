@@ -131,6 +131,40 @@ Resources:
       KeySpec: SYMMETRIC_DEFAULT
       KeyUsage: ENCRYPT_DECRYPT
 
+  UploadsVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.1.0.0/22
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.1.0.0/24
+      VpcId: !Ref UploadsVpc
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.1.1.0/24
+      VpcId: !Ref UploadsVpc
+
+  UploadsS3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref UploadsVpc
+
+  UploadsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: String
+      GroupName: !Sub "VideoProcessingSecurityGroup-${AWS::Region}"
+      VpcId: !Ref UploadsVpc
+  #      SecurityGroupEgress:
+  #        - Egress
+  #      SecurityGroupIngress:
+  #        - Ingress
+
   NewUploadHandler:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -153,9 +187,13 @@ Resources:
         Variables:
           VIDEO_PROCESSING_STEP_FUNCTION_ARN: !Ref VideoProcessingStateMachineArn
       Policies:
-#        - AmazonS3FullAccess
-#        - AmazonRekognitionFullAccess
         - AWSStepFunctionsFullAccess
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt UploadsSecurityGroup.GroupId
+        SubnetIds:
+          - !Ref Subnet1
+          - !Ref Subnet2
 
 #Outputs:
 #  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

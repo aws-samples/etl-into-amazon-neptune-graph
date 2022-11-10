@@ -68,6 +68,34 @@ Resources:
       KeySpec: SYMMETRIC_DEFAULT
       KeyUsage: ENCRYPT_DECRYPT
 
+  VideoProcessingVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/22
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      VpcId: !Ref VideoProcessingVpc
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.1.0/24
+      VpcId: !Ref VideoProcessingVpc
+
+  VideoProcessingSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: String
+      GroupName: !Sub "VideoProcessingSecurityGroup-${AWS::Region}"
+      VpcId: !Ref VideoProcessingVpc
+#      SecurityGroupEgress:
+#        - Egress
+#      SecurityGroupIngress:
+#        - Ingress
+
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -95,6 +123,12 @@ Resources:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
         - AmazonSQSFullAccess
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt VideoProcessingSecurityGroup.GroupId
+        SubnetIds:
+          - !Ref Subnet1
+          - !Ref Subnet2
 
   CheckRekognitionResultsFunction:
     Type: AWS::Serverless::Function
@@ -113,6 +147,12 @@ Resources:
       Policies:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt VideoProcessingSecurityGroup.GroupId
+        SubnetIds:
+          - !Ref Subnet1
+          - !Ref Subnet2
 
   CreateGraphLoadFilesFunction:
     Type: AWS::Serverless::Function
@@ -133,6 +173,12 @@ Resources:
       Environment:
         Variables:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt VideoProcessingSecurityGroup.GroupId
+        SubnetIds:
+          - !Ref Subnet1
+          - !Ref Subnet2
 
   LoadToGraphFunction:
     Type: AWS::Serverless::Function
