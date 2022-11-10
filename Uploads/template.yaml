@@ -100,10 +100,10 @@ Resources:
   NewUploadQueue:
     Type: AWS::SQS::Queue
     Properties:
-      SqsManagedSseEnabled: True
+      KmsMasterKeyId: !Ref UploadsMasterKmsKey
       QueueName: !Sub "new-upload-${AWS::AccountId}-${AWS::Region}"
 
-  UploadsFunctionEnvVarKmsKey:
+  UploadsMasterKmsKey:
     Type: AWS::KMS::Key
     Properties:
       Enabled: true
@@ -130,7 +130,7 @@ Resources:
       CodeUri: upload_handler/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt UploadsFunctionEnvVarKmsKey.Arn
+      KmsKeyArn: !GetAtt UploadsMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
       Architectures:
         - x86_64

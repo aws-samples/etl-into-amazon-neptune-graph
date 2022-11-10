@@ -2,8 +2,8 @@ from random import randint
 import boto3
 import os
 
-rek_complete_topic = os.environ["SNS_TOPIC"]
-rek_complete_topic_role = os.environ["SNS_ROLE"]
+# rek_complete_topic = os.environ["SNS_TOPIC"]
+# rek_complete_topic_role = os.environ["SNS_ROLE"]
 
 rek = boto3.client("rekognition")
 
@@ -38,10 +38,6 @@ def lambda_handler(event, context):
                 "Bucket": bucket,
                 "Name": key
             }
-        },
-        NotificationChannel={
-            'SNSTopicArn': rek_complete_topic,
-            'RoleArn': rek_complete_topic_role
         },
         ClientRequestToken=key.strip(".mp4")
     )

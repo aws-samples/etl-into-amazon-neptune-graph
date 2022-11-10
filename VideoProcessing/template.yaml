@@ -46,7 +46,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref LoadToGraphFunction
 
-  FunctionEnvVarKmsKey:
+  VideoMasterKmsKey:
     Type: AWS::KMS::Key
     Properties:
       Enabled: true
@@ -73,7 +73,7 @@ Resources:
       CodeUri: functions/start_label_detection/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
+      KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
       Timeout: 15
       Architectures:
@@ -81,18 +81,10 @@ Resources:
       Environment:
         Variables:
           SNS_ROLE: !GetAtt RekognitionRole.Arn
-          SNS_TOPIC: !Ref LabelDetectionCompleteTopic
       Policies:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
         - AmazonSQSFullAccess
-        - Statement:
-            - Sid: PassSnsRolePolicy
-              Effect: Allow
-              Action:
-                - iam:GetRole
-                - iam:PassRole
-              Resource: !GetAtt RekognitionRole.Arn
 
   CheckRekognitionResultsFunction:
     Type: AWS::Serverless::Function
@@ -100,7 +92,7 @@ Resources:
       CodeUri: functions/check_rek_results/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
+      KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
       Timeout: 60
       Architectures:
@@ -115,7 +107,7 @@ Resources:
       CodeUri: functions/create_graph_load_files/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
+      KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
       Timeout: 600
       Architectures:
@@ -133,7 +125,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       Timeout: 60
-      KmsKeyArn: !GetAtt FunctionEnvVarKmsKey.Arn
+      KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
       Architectures:
         - x86_64
@@ -147,18 +139,18 @@ Resources:
         SubnetIds:
           - !Ref NeptuneSubnet
 
-  LabelDetectionCompleteTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub "video-${AWS::AccountId}-${AWS::Region}"
-      KmsMasterKeyId: "alias/aws/sns"
+#  LabelDetectionCompleteTopic:
+#    Type: AWS::SNS::Topic
+#    Properties:
+#      TopicName: !Sub "video-${AWS::AccountId}-${AWS::Region}"
+#      KmsMasterKeyId: "alias/aws/sns"
 
   RekognitionRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub "video_processing_topic_role_${AWS::Region}"
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+#        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
       AssumeRolePolicyDocument: 
         {
