@@ -24,10 +24,13 @@ class GraphLoadFiles:
         print(f"Creating node: {node['Name']}")
         node["id"] = self.get_node_id(node)
 
+        parent_names = [ parent["Name"] for parent in node["Parents"] ]
+
         node_dict = {
             ":ID": self.get_node_id(node),
             ":Label": node["Name"],
-            "confidence:Float": node["Confidence"]
+            "confidence:Float": node["Confidence"],
+            "parents:String":  ", ".join(parent_names),
         }
         self.nodes.append(node_dict)
 
@@ -78,7 +81,7 @@ class GraphLoadFiles:
 
     def write_nodes(self):
         outfile_path = f"{self.source_name}-nodes.csv"
-        node_columns = [":ID", ":Label", "confidence:Float"]
+        node_columns = [":ID", ":Label", "confidence:Float", "parents:String"]
         print(f"Node Columns: {node_columns}")
         with open(os.path.join("/", "tmp", outfile_path), "w") as output_file:
             dict_writer = csv.DictWriter(output_file, node_columns)
