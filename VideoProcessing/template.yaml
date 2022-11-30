@@ -91,10 +91,6 @@ Resources:
       GroupDescription: String
       GroupName: !Sub "VideoProcessingSecurityGroup-${AWS::Region}"
       VpcId: !Ref VideoProcessingVpc
-#      SecurityGroupEgress:
-#        - Egress
-#      SecurityGroupIngress:
-#        - Ingress
 
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
@@ -225,47 +221,9 @@ Resources:
             ]
         }
 
-#  GraphLoadLoggingBucket:
-#    Type: AWS::S3::Bucket
-#    DeletionPolicy: Retain
-#    UpdateReplacePolicy: Retain
-#    Properties:
-#      AccessControl: "LogDeliveryWrite"
-#      VersioningConfiguration:
-#        Status: Enabled
-#      PublicAccessBlockConfiguration:
-#        BlockPublicAcls: True
-#        BlockPublicPolicy: True
-#        IgnorePublicAcls: True
-#        RestrictPublicBuckets: True
-#      BucketEncryption:
-#        ServerSideEncryptionConfiguration:
-#          - ServerSideEncryptionByDefault:
-#              SSEAlgorithm: AES256
-
-#  GraphLoadLoggingBucketPolicy:
-#    Type: AWS::S3::BucketPolicy
-#    Properties:
-#      Bucket: !Ref GraphLoadLoggingBucket
-#      PolicyDocument:
-#        Statement:
-#          - Effect: "Deny"
-#            Action: "s3:*"
-#            Principal: "*"
-#            Resource:
-#              - !Sub "${GraphLoadLoggingBucket.Arn}/*"
-#              - !GetAtt GraphLoadLoggingBucket.Arn
-#            Condition:
-#              Bool:
-#                aws:SecureTransport: false
-
   GraphLoadStagingBucket:
     Type: AWS::S3::Bucket
     Properties:
-#      LoggingConfiguration:
-#        DestinationBucketName:
-#          !Ref GraphLoadLoggingBucket
-#        LogFilePrefix: "artifacts-logs"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:

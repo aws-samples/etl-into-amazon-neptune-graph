@@ -19,56 +19,14 @@ Parameters:
 
 Resources:
 
-#  IngestLoggingBucket:
-#    Type: AWS::S3::Bucket
-#    DeletionPolicy: Retain
-#    UpdateReplacePolicy: Retain
-#    Properties:
-#      AccessControl: "LogDeliveryWrite"
-#      VersioningConfiguration:
-#        Status: Enabled
-#      PublicAccessBlockConfiguration:
-#        BlockPublicAcls: True
-#        BlockPublicPolicy: True
-#        IgnorePublicAcls: True
-#        RestrictPublicBuckets: True
-#      BucketEncryption:
-#        ServerSideEncryptionConfiguration:
-#          - ServerSideEncryptionByDefault:
-#              SSEAlgorithm: AES256
-#
-#  IngestLoggingBucketPolicy:
-#    Type: AWS::S3::BucketPolicy
-#    Properties:
-#      Bucket: !Ref IngestLoggingBucket
-#      PolicyDocument:
-#        Statement:
-#          - Effect: "Deny"
-#            Action: "s3:*"
-#            Principal: "*"
-#            Resource:
-#              - !Sub "${IngestLoggingBucket.Arn}/*"
-#              - !GetAtt IngestLoggingBucket.Arn
-#            Condition:
-#              Bool:
-#                aws:SecureTransport: false
-
   IngestBucket:
     Type: AWS::S3::Bucket
     Properties:
-#      LoggingConfiguration:
-#        DestinationBucketName:
-#          !Ref IngestLoggingBucket
-#        LogFilePrefix: "ingest-logs"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
       BucketName: !Sub "video-ingest-${AWS::AccountId}-${AWS::Region}"
-#      NotificationConfiguration:
-#        QueueConfigurations:
-#          - Event: s3:ObjectCreated:*
-#            Queue: !GetAtt NewUploadQueue.Arn
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -77,89 +35,10 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
-#  QueuePolicy:
-#    Type: 'AWS::SQS::QueuePolicy'
-#    Properties:
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Principal:
-#              Service: "s3.amazonaws.com"
-#            Action:
-#              - 'SQS:SendMessage'
-#            Resource: !GetAtt NewUploadQueue.Arn
-#            Condition:
-#              ArnLike:
-#                aws:SourceArn: !Join [ "",[ 'arn:aws:s3:::', !Sub "video-ingest-${AWS::AccountId}-${AWS::Region}" ] ]
-#              StringEquals:
-#                aws:SourceAccount: !Ref AWS::AccountId
-#      Queues:
-#        - !Ref NewUploadQueue
-
-#  NewUploadQueue:
-#    Type: AWS::SQS::Queue
-#    Properties:
-#      KmsMasterKeyId: !Ref UploadsMasterKmsKey
-#      QueueName: !Sub "new-upload-${AWS::AccountId}-${AWS::Region}"
-
   UploadsDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-#      KmsMasterKeyId: !Ref UploadsMasterKmsKey
       QueueName: !Sub "uploads-dead-letter-queue-${AWS::AccountId}-${AWS::Region}"
-
-#  UploadsMasterKmsKey:
-#    Type: AWS::KMS::Key
-#    Properties:
-#      Enabled: true
-#      EnableKeyRotation: true
-#      KeyPolicy:
-#        Version: 2012-10-17
-#        Id: key-default-1
-#        Statement:
-#          - Sid: Enable IAM User Permissions
-#            Effect: Allow
-#            Principal:
-#              AWS: !Sub "${AWS::AccountId}"
-#            Action: 'kms:*'
-#            Resource: '*'
-#      KeySpec: SYMMETRIC_DEFAULT
-#      KeyUsage: ENCRYPT_DECRYPT
-
-#  UploadsVpc:
-#    Type: AWS::EC2::VPC
-#    Properties:
-#      CidrBlock: 10.1.0.0/22
-#
-#  Subnet1:
-#    Type: AWS::EC2::Subnet
-#    Properties:
-#      CidrBlock: 10.1.0.0/24
-#      VpcId: !Ref UploadsVpc
-#
-#  Subnet2:
-#    Type: AWS::EC2::Subnet
-#    Properties:
-#      CidrBlock: 10.1.1.0/24
-#      VpcId: !Ref UploadsVpc
-#
-#  UploadsS3Endpoint:
-#    Type: AWS::EC2::VPCEndpoint
-#    Properties:
-#      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
-#      VpcId: !Ref UploadsVpc
-
-#  UploadsSecurityGroup:
-#    Type: AWS::EC2::SecurityGroup
-#    Properties:
-#      GroupDescription: String
-#      GroupName: !Sub "VideoProcessingSecurityGroup-${AWS::Region}"
-#      VpcId: !Ref UploadsVpc
-#  #      SecurityGroupEgress:
-#  #        - Egress
-#  #      SecurityGroupIngress:
-#  #        - Ingress
 
   NewUploadHandler:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -168,8 +47,6 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       Timeout: 15
-#      KmsKeyArn: !GetAtt UploadsMasterKmsKey.Arn
-#      ReservedConcurrentExecutions: 1
       DeadLetterQueue:
         TargetArn: !GetAtt UploadsDeadLetterQueue.Arn
         Type: SQS
@@ -177,9 +54,6 @@ Resources:
         - x86_64
       Events:
         NewVideoUpload:
-#          Type: SQS
-#          Properties:
-#            Queue: !GetAtt NewUploadQueue.Arn
           Type: S3
           Properties:
             Bucket: !Ref IngestBucket
@@ -189,30 +63,3 @@ Resources:
           VIDEO_PROCESSING_STEP_FUNCTION_ARN: !Ref VideoProcessingStateMachineArn
       Policies:
         - AWSStepFunctionsFullAccess
-#        - AWSLambdaSQSQueueExecutionRole
-#        - Statement:
-#            Effect: Allow
-#            Action:
-#              - "kms:*"
-#            Resource:
-#              - !GetAtt UploadsMasterKmsKey.Arn
-#      VpcConfig:
-#        SecurityGroupIds:
-#          - !GetAtt UploadsSecurityGroup.GroupId
-#        SubnetIds:
-#          - !Ref Subnet1
-#          - !Ref Subnet2
-
-#Outputs:
-#  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-#  # Find out more about other implicit resources you can reference within SAM
-#  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-#  HelloWorldApi:
-#    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-#    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-#  HelloWorldFunction:
-#    Description: "Hello World Lambda Function ARN"
-#    Value: !GetAtt HelloWorldFunction.Arn
-#  HelloWorldFunctionIamRole:
-#    Description: "Implicit IAM Role created for Hello World function"
-#    Value: !GetAtt HelloWorldFunctionRole.Arn
