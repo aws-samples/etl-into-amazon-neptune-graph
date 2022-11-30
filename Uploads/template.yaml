@@ -31,6 +31,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub "uploads-dead-letter-queue-${AWS::AccountId}-${AWS::Region}"
+      SqsManagedSseEnabled: true
 
   NewUploadHandler:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -39,6 +40,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       Timeout: 15
+      ReservedConcurrentExecutions: 1
       DeadLetterQueue:
         TargetArn: !GetAtt UploadsDeadLetterQueue.Arn
         Type: SQS
