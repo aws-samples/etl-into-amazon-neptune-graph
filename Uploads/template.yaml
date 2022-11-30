@@ -5,14 +5,6 @@ Description: >
 
   Sample SAM Template for UploadsStack
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
-Globals:
-  Function:
-    Timeout: 3
-    Tracing: Active
-  Api:
-    TracingEnabled: True
-
 Parameters:
   VideoProcessingStateMachineArn:
     Type: String

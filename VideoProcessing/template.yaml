@@ -5,13 +5,6 @@ Description: >
 
   Sample SAM Template for VideoProcessing
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
-Globals:
-  Function:
-    Tracing: Active
-  Api:
-    TracingEnabled: True
-
 Parameters:
   NeptuneLoadFromS3IAMRoleArn:
     Type: String
