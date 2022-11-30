@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "graph-proto"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-3b4rmfajlr3k"
+s3_prefix = "graph-proto"
+region = "us-west-2"
+capabilities = "CAPABILITY_AUTO_EXPAND CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+image_repositories = []
+confirm_changeset = true

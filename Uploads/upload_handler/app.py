@@ -25,13 +25,13 @@ def lambda_handler(event, context):
     print(f"Preparing to trigger: {step_function_arn}")
     responses = []
     for record in event["Records"]:
-        payload = json.loads(record['body'])
-        logger.info(f"Payload: %s", payload)
-        for payload_record in payload["Records"]:
-            logger.info(f"Payload Record: %s", payload_record)
+        # payload = json.loads(record['body'])
+        # logger.info(f"Payload: %s", payload)
+        # for payload_record in payload["Records"]:
+            logger.info(f"Processing Record: %s", record)
             # try:
-            bucket = payload_record["s3"]["bucket"]["name"]
-            key = payload_record["s3"]["object"]["key"]
+            bucket = record["s3"]["bucket"]["name"]
+            key = record["s3"]["object"]["key"]
             logger.info("Bucket: %s", bucket)
             logger.info("Key: %s", key)
             state = {

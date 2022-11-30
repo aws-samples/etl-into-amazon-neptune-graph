@@ -204,18 +204,11 @@ Resources:
         SubnetIds:
           - !Ref NeptuneSubnet
 
-#  LabelDetectionCompleteTopic:
-#    Type: AWS::SNS::Topic
-#    Properties:
-#      TopicName: !Sub "video-${AWS::AccountId}-${AWS::Region}"
-#      KmsMasterKeyId: "alias/aws/sns"
-
   RekognitionRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub "video_processing_topic_role_${AWS::Region}"
       ManagedPolicyArns:
-#        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
       AssumeRolePolicyDocument: 
         {
@@ -232,47 +225,47 @@ Resources:
             ]
         }
 
-  GraphLoadLoggingBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      AccessControl: "LogDeliveryWrite"
-      VersioningConfiguration:
-        Status: Enabled
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: True
-        BlockPublicPolicy: True
-        IgnorePublicAcls: True
-        RestrictPublicBuckets: True
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+#  GraphLoadLoggingBucket:
+#    Type: AWS::S3::Bucket
+#    DeletionPolicy: Retain
+#    UpdateReplacePolicy: Retain
+#    Properties:
+#      AccessControl: "LogDeliveryWrite"
+#      VersioningConfiguration:
+#        Status: Enabled
+#      PublicAccessBlockConfiguration:
+#        BlockPublicAcls: True
+#        BlockPublicPolicy: True
+#        IgnorePublicAcls: True
+#        RestrictPublicBuckets: True
+#      BucketEncryption:
+#        ServerSideEncryptionConfiguration:
+#          - ServerSideEncryptionByDefault:
+#              SSEAlgorithm: AES256
 
-  GraphLoadLoggingBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref GraphLoadLoggingBucket
-      PolicyDocument:
-        Statement:
-          - Effect: "Deny"
-            Action: "s3:*"
-            Principal: "*"
-            Resource:
-              - !Sub "${GraphLoadLoggingBucket.Arn}/*"
-              - !GetAtt GraphLoadLoggingBucket.Arn
-            Condition:
-              Bool:
-                aws:SecureTransport: false
+#  GraphLoadLoggingBucketPolicy:
+#    Type: AWS::S3::BucketPolicy
+#    Properties:
+#      Bucket: !Ref GraphLoadLoggingBucket
+#      PolicyDocument:
+#        Statement:
+#          - Effect: "Deny"
+#            Action: "s3:*"
+#            Principal: "*"
+#            Resource:
+#              - !Sub "${GraphLoadLoggingBucket.Arn}/*"
+#              - !GetAtt GraphLoadLoggingBucket.Arn
+#            Condition:
+#              Bool:
+#                aws:SecureTransport: false
 
   GraphLoadStagingBucket:
     Type: AWS::S3::Bucket
     Properties:
-      LoggingConfiguration:
-        DestinationBucketName:
-          !Ref GraphLoadLoggingBucket
-        LogFilePrefix: "artifacts-logs"
+#      LoggingConfiguration:
+#        DestinationBucketName:
+#          !Ref GraphLoadLoggingBucket
+#        LogFilePrefix: "artifacts-logs"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -287,12 +280,6 @@ Resources:
         Status: Enabled
 
 Outputs:
-  # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
-  # Find out more about other implicit resources you can reference within SAM
-  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
   VideoProcessingStateMachineArn:
-    Description: "Stock Trading State machine ARN"
+    Description: "ETL State machine ARN"
     Value: !Ref VideoProcessingStateMachine
-#  StockTradingStateMachineRoleArn:
-#    Description: "IAM Role created for Stock Trading State machine based on the specified SAM Policy Templates"
-#    Value: !GetAtt StockTradingStateMachineRole.Arn

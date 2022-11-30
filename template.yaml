@@ -6,9 +6,9 @@ Description: >
   Sample SAM Template for VideoProcessing
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
-#Globals:
-#  Function:
-#    Tracing: Active
+Globals:
+  Function:
+    Tracing: Active
 #  Api:
 #    TracingEnabled: True
 
@@ -36,8 +36,3 @@ Resources:
       Location: Uploads/template.yaml
       Parameters:
         VideoProcessingStateMachineArn: !GetAtt VideoIngestStack.Outputs.VideoProcessingStateMachineArn
-
-Outputs:
-  NeptuneLoadFromS3IAMRoleArn:
-    Description: The role used to load data from s3
-    Value: !GetAtt GraphStack.Outputs.NeptuneLoadFromS3IAMRoleArn

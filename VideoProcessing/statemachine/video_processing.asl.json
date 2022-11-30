@@ -1,5 +1,5 @@
 {
-  "Comment" : "A state machine that does mock stock trading.",
+  "Comment" : "A state machine that extracts graph features and loads into Amazon Neptune.",
   "StartAt" : "Rekognition Label Detection",
   "States" : {
     "Rekognition Label Detection" : {
