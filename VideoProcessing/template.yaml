@@ -39,28 +39,6 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref LoadToGraphFunction
 
-  VideoMasterKmsKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Enabled: true
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: 2012-10-17
-        Id: key-default-1
-        Statement:
-          - Sid: Enable IAM User Permissions
-            Effect: Allow
-            Principal:
-              AWS: !Join
-                - ''
-                - - 'arn:aws:iam::'
-                  - !Ref 'AWS::AccountId'
-                  - ':root'
-            Action: 'kms:*'
-            Resource: '*'
-      KeySpec: SYMMETRIC_DEFAULT
-      KeyUsage: ENCRYPT_DECRYPT
-
   VideoProcessingVpc:
     Type: AWS::EC2::VPC
     Properties:
@@ -88,8 +66,8 @@ Resources:
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      KmsMasterKeyId: !Ref VideoMasterKmsKey
       QueueName: !Sub "video-processing-dead-letter-queue-${AWS::AccountId}-${AWS::Region}"
+      SqsManagedSseEnabled: true
 
   StartRekognitionJobFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -97,7 +75,6 @@ Resources:
       CodeUri: functions/start_label_detection/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       DeadLetterQueue:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
         Type: SQS
@@ -112,12 +89,12 @@ Resources:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
         - AmazonSQSFullAccess
-      VpcConfig:
-        SecurityGroupIds:
-          - !GetAtt VideoProcessingSecurityGroup.GroupId
-        SubnetIds:
-          - !Ref Subnet1
-          - !Ref Subnet2
+#      VpcConfig:
+#        SecurityGroupIds:
+#          - !GetAtt VideoProcessingSecurityGroup.GroupId
+#        SubnetIds:
+#          - !Ref Subnet1
+#          - !Ref Subnet2
 
   CheckRekognitionResultsFunction:
     Type: AWS::Serverless::Function
@@ -125,7 +102,6 @@ Resources:
       CodeUri: functions/check_rek_results/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       DeadLetterQueue:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
         Type: SQS
@@ -136,12 +112,12 @@ Resources:
       Policies:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
-      VpcConfig:
-        SecurityGroupIds:
-          - !GetAtt VideoProcessingSecurityGroup.GroupId
-        SubnetIds:
-          - !Ref Subnet1
-          - !Ref Subnet2
+#      VpcConfig:
+#        SecurityGroupIds:
+#          - !GetAtt VideoProcessingSecurityGroup.GroupId
+#        SubnetIds:
+#          - !Ref Subnet1
+#          - !Ref Subnet2
 
   CreateGraphLoadFilesFunction:
     Type: AWS::Serverless::Function
@@ -149,7 +125,6 @@ Resources:
       CodeUri: functions/create_graph_load_files/
       Handler: app.lambda_handler
       Runtime: python3.9
-      KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
       DeadLetterQueue:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
@@ -162,12 +137,12 @@ Resources:
       Environment:
         Variables:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
-      VpcConfig:
-        SecurityGroupIds:
-          - !GetAtt VideoProcessingSecurityGroup.GroupId
-        SubnetIds:
-          - !Ref Subnet1
-          - !Ref Subnet2
+#      VpcConfig:
+#        SecurityGroupIds:
+#          - !GetAtt VideoProcessingSecurityGroup.GroupId
+#        SubnetIds:
+#          - !Ref Subnet1
+#          - !Ref Subnet2
 
   LoadToGraphFunction:
     Type: AWS::Serverless::Function
@@ -176,7 +151,6 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       Timeout: 60
-      KmsKeyArn: !GetAtt VideoMasterKmsKey.Arn
       ReservedConcurrentExecutions: 1
       DeadLetterQueue:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
