@@ -1,2 +1,3 @@
 **/.aws-sam/*
 **/.idea/*
+.samconfig.toml
