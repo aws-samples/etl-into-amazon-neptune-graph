@@ -24,9 +24,7 @@ Resources:
       Location: VideoProcessing/template.yaml
       Parameters:
         NeptuneLoadFromS3IAMRoleArn: !GetAtt GraphStack.Outputs.NeptuneLoadFromS3IAMRoleArn
-        NeptuneEndpoint: !GetAtt GraphStack.Outputs.DBClusterEndpoint
         NeptuneLoaderEndpoint: !GetAtt GraphStack.Outputs.LoaderEndpoint
-        NeptunePort: !GetAtt GraphStack.Outputs.DBClusterPort
         NeptuneSubnet: !GetAtt GraphStack.Outputs.Subnet1
         NeptuneSecurityGroup: !GetAtt GraphStack.Outputs.NeptuneSecurityGroup
 

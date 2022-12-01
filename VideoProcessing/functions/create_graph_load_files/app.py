@@ -7,8 +7,10 @@ import hashlib
 import os
 import itertools
 import csv
+import json
 
 graph_load_staging_bucket = os.environ["GRAPH_LOAD_STAGING_BUCKET"]
+graph_load_processing_bucket = os.environ["GRAPH_LOAD_PROCESSING_BUCKET"]
 
 s3 = boto3.client("s3")
 
@@ -126,7 +128,15 @@ def lambda_handler(event, context):
     }
 
     # Wrtie node and edge files from detected labels
-    labels = event["LabelDetectionData"]["Labels"]
+
+    # video_processing_job_data = event["LabelDetectionData"]
+    response = s3.get_object(
+        Bucket=graph_load_processing_bucket,
+        Key=event["LabelDataS3Key"]
+    )
+    video_processing_job_data = json.load(response['Body'])
+
+    labels = video_processing_job_data["Labels"]
 
     gl = GraphLoadFiles(event["key"])
     nodes_by_timestamp = gl.sort_labels_by_timestamp(labels)

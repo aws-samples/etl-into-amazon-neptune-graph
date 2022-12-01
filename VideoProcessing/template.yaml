@@ -8,11 +8,7 @@ Description: >
 Parameters:
   NeptuneLoadFromS3IAMRoleArn:
     Type: String
-  NeptuneEndpoint: # todo: purge, not using
-    Type: String
   NeptuneLoaderEndpoint:
-    Type: String
-  NeptunePort: # todo: purge, not using
     Type: String
   NeptuneSubnet:
     Type: String
@@ -20,6 +16,23 @@ Parameters:
     Type: String
 
 Resources:
+
+  GraphLoadProcessingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub "graph-load-processing-${AWS::AccountId}-${AWS::Region}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+
   VideoProcessingStateMachine:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
@@ -38,30 +51,6 @@ Resources:
             FunctionName: !Ref CreateGraphLoadFilesFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref LoadToGraphFunction
-
-  VideoProcessingVpc:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/22
-
-  Subnet1:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.0.0.0/24
-      VpcId: !Ref VideoProcessingVpc
-
-  Subnet2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.0.1.0/24
-      VpcId: !Ref VideoProcessingVpc
-
-  VideoProcessingSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: String
-      GroupName: !Sub "VideoProcessingSecurityGroup-${AWS::Region}"
-      VpcId: !Ref VideoProcessingVpc
 
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
@@ -89,12 +78,6 @@ Resources:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
         - AmazonSQSFullAccess
-#      VpcConfig:
-#        SecurityGroupIds:
-#          - !GetAtt VideoProcessingSecurityGroup.GroupId
-#        SubnetIds:
-#          - !Ref Subnet1
-#          - !Ref Subnet2
 
   CheckRekognitionResultsFunction:
     Type: AWS::Serverless::Function
@@ -112,12 +95,9 @@ Resources:
       Policies:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
-#      VpcConfig:
-#        SecurityGroupIds:
-#          - !GetAtt VideoProcessingSecurityGroup.GroupId
-#        SubnetIds:
-#          - !Ref Subnet1
-#          - !Ref Subnet2
+      Environment:
+        Variables:
+          GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
 
   CreateGraphLoadFilesFunction:
     Type: AWS::Serverless::Function
@@ -137,12 +117,7 @@ Resources:
       Environment:
         Variables:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
-#      VpcConfig:
-#        SecurityGroupIds:
-#          - !GetAtt VideoProcessingSecurityGroup.GroupId
-#        SubnetIds:
-#          - !Ref Subnet1
-#          - !Ref Subnet2
+          GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
 
   LoadToGraphFunction:
     Type: AWS::Serverless::Function
@@ -161,6 +136,7 @@ Resources:
         Variables:
           NEPTUNE_LOADER_ENDPOINT: !Ref NeptuneLoaderEndpoint
           NEPTUNE_LOAD_ROLE_ARN: !Ref NeptuneLoadFromS3IAMRoleArn
+          GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
       VpcConfig:
         SecurityGroupIds:
           - !Ref NeptuneSecurityGroup
