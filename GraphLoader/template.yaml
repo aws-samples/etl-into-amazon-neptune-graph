@@ -25,6 +25,47 @@ Globals:
 
 Resources:
 
+  GraphLoadStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/video_processing.asl.json
+      DefinitionSubstitutions:
+        GraphLoadFunctionArn: !GetAtt GraphLoadFunction.Arn
+        CheckGraphLoadStatusFunctionArn: !GetAtt CheckGraphLoadStatusFunction.Arn
+      #        LoadToGraphFunctionArn: !GetAtt LoadToGraphFunction.Arn
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GraphLoadFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CheckGraphLoadStatusFunction
+
+  GraphLoadStateMachineTrigger:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: functions/graph_load_state_machine_trigger
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Timeout: 15
+      ReservedConcurrentExecutions: 1
+      DeadLetterQueue:
+        TargetArn: !GetAtt GraphLoadTriggerDeadLetterLoadQueue.Arn
+        Type: SQS
+      Architectures:
+        - x86_64
+      Events:
+        GraphLoadEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt GraphLoadQueue.Arn
+            BatchSize: 10
+      Environment:
+        Variables:
+          GRAPH_LOAD_STATE_MACHINE_ARN: !Ref GraphLoadStateMachine
+      Policies:
+        - AWSStepFunctionsFullAccess
+        - AmazonSQSFullAccess
+        - AWSLambdaBasicExecutionRole
+
   GraphLoadStagingBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -47,13 +88,19 @@ Resources:
 #      QueueName: !Sub "graph-loader-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       SqsManagedSseEnabled: true
 
-  LoadToGraphDeadLetterQueue:
+  GraphLoadTriggerDeadLetterLoadQueue:
     Type: AWS::SQS::Queue
     Properties:
-#      QueueName: !Sub "graph-loader-dl-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+      #      QueueName: !Sub "graph-loader-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       SqsManagedSseEnabled: true
 
-  LoadToGraphFunction:
+#  LoadToGraphDeadLetterQueue:
+#    Type: AWS::SQS::Queue
+#    Properties:
+##      QueueName: !Sub "graph-loader-dl-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+#      SqsManagedSseEnabled: true
+
+  GraphLoadFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/load_to_graph/
@@ -61,15 +108,9 @@ Resources:
       Runtime: python3.9
       Timeout: 60
       ReservedConcurrentExecutions: 1
-#      Events:
-#        GraphLoadEvent:
-#          Type: SQS
-#          Properties:
-#            Queue: !Ref GraphLoadQueue
-#            BatchSize: 10
-      DeadLetterQueue:
-        TargetArn: !GetAtt LoadToGraphDeadLetterQueue.Arn
-        Type: SQS
+#      DeadLetterQueue:
+#        TargetArn: !GetAtt LoadToGraphDeadLetterQueue.Arn
+#        Type: SQS
       Architectures:
         - x86_64
       Environment:
@@ -84,8 +125,32 @@ Resources:
           - !Ref NeptuneSubnet
       Policies:
         - AmazonS3FullAccess
-        - SQSPollerPolicy:
-            QueueName: !Ref GraphLoadQueue
+#        - AmazonSQSFullAccess
+
+  CheckGraphLoadStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/check_load_status/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Timeout: 60
+      ReservedConcurrentExecutions: 1
+#      DeadLetterQueue:
+#        TargetArn: !GetAtt LoadToGraphDeadLetterQueue.Arn
+#        Type: SQS
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          NEPTUNE_LOADER_ENDPOINT: !Ref NeptuneLoaderEndpoint
+          NEPTUNE_LOAD_ROLE_ARN: !Ref NeptuneLoadFromS3IAMRoleArn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref NeptuneSecurityGroup
+        SubnetIds:
+          - !Ref NeptuneSubnet
+#      Policies:
+#        - AmazonS3FullAccess
 
 Outputs:
   GraphLoadStagingBucket:

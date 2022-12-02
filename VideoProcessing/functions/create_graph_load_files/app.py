@@ -165,6 +165,7 @@ def lambda_handler(event, context):
     event["GraphDataStagingBucket"] = graph_load_staging_bucket
     event["NodesFileKey"] = nodes_file
     event["EdgesFileKey"] = edges_file
+    event["Filename"] = outfile
 
     # add task to the graph loader queue for final load from these files
 

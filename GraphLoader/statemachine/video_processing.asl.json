@@ -1,0 +1,63 @@
+{
+  "Comment" : "A state machine that loads into Amazon Neptune.",
+  "StartAt" : "Initiate Graph Load",
+  "States" : {
+    "Initiate Graph Load" : {
+      "Type" : "Task",
+      "Resource" : "${GraphLoadFunctionArn}",
+      "Retry" : [ {
+        "ErrorEquals" : [ "States.TaskFailed" ],
+        "IntervalSeconds" : 15,
+        "MaxAttempts" : 5,
+        "BackoffRate" : 1.5
+      } ],
+      "Next" : "Wait 10 Seconds"
+    },
+    "Wait 10 Seconds": {
+        "Type": "Wait",
+        "Seconds": 10,
+        "Next": "Get Job Status"
+      },
+    "Get Job Status" : {
+      "Type" : "Task",
+      "Resource" : "${CheckGraphLoadStatusFunctionArn}",
+      "Retry" : [ {
+        "ErrorEquals" : [ "States.TaskFailed" ],
+        "IntervalSeconds" : 2,
+        "MaxAttempts" : 3,
+        "BackoffRate" : 1
+      } ],
+      "Next": "Is Load Complete?"
+    },
+      "Is Load Complete?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.LoadStatus",
+            "StringEquals": "NOT_COMPLETE",
+            "Next": "Wait 10 Seconds"
+          },
+          {
+            "Variable": "$.LoadStatus",
+            "StringEquals": "FAILED",
+            "Next": "FailState"
+          },
+          {
+            "Variable": "$.LoadStatus",
+            "StringEquals": "COMPLETE",
+            "Next": "Job Complete"
+          }
+        ],
+        "Default": "Wait 10 Seconds"
+      },
+    "FailState": {
+      "Type": "Fail",
+      "Cause": "There was a problem loading some of your files",
+      "Error": "Check the handler lambda logs to see which load jobs failed"
+    },
+    "Job Complete": {
+      "Type": "Pass",
+      "End" : true
+    }
+  }
+}

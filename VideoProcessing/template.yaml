@@ -45,8 +45,6 @@ Resources:
             FunctionName: !Ref CheckRekognitionResultsFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CreateGraphLoadFilesFunction
-#        - LambdaInvokePolicy:
-#            FunctionName: !Ref LoadToGraphFunction
 
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
