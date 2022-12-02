@@ -6,13 +6,9 @@ Description: >
   Sample SAM Template for VideoProcessing
 
 Parameters:
-  NeptuneLoadFromS3IAMRoleArn:
+  GraphLoadStagingBucket:
     Type: String
-  NeptuneLoaderEndpoint:
-    Type: String
-  NeptuneSubnet:
-    Type: String
-  NeptuneSecurityGroup:
+  GraphLoadQueue:
     Type: String
 
 Resources:
@@ -24,7 +20,7 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-      BucketName: !Sub "graph-load-processing-${AWS::AccountId}-${AWS::Region}"
+#      BucketName: !Sub "graph-load-processing-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -41,7 +37,7 @@ Resources:
         StartRekognitionJobFunctionArn: !GetAtt StartRekognitionJobFunction.Arn
         CheckRekognitionResultsFunctionArn: !GetAtt CheckRekognitionResultsFunction.Arn
         CreateGraphLoadFilesFunctionArn: !GetAtt CreateGraphLoadFilesFunction.Arn
-        LoadToGraphFunctionArn: !GetAtt LoadToGraphFunction.Arn
+#        LoadToGraphFunctionArn: !GetAtt LoadToGraphFunction.Arn
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref StartRekognitionJobFunction
@@ -49,13 +45,13 @@ Resources:
             FunctionName: !Ref CheckRekognitionResultsFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CreateGraphLoadFilesFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref LoadToGraphFunction
+#        - LambdaInvokePolicy:
+#            FunctionName: !Ref LoadToGraphFunction
 
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "video-processing-dead-letter-queue-${AWS::AccountId}-${AWS::Region}"
+#      QueueName: !Sub "video-processing-dead-letter-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       SqsManagedSseEnabled: true
 
   StartRekognitionJobFunction:
@@ -114,34 +110,31 @@ Resources:
         - x86_64
       Policies:
         - AmazonS3FullAccess
+        - SQSSendMessagePolicy:
+            QueueName: !Ref GraphLoadQueue
+        - AmazonSQSFullAccess
       Environment:
         Variables:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
           GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
+          GRAPH_LOAD_QUEUE: !Ref GraphLoadQueue
 
-  LoadToGraphFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/load_to_graph/
-      Handler: app.lambda_handler
-      Runtime: python3.9
-      Timeout: 60
-      ReservedConcurrentExecutions: 1
-      DeadLetterQueue:
-        TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
-        Type: SQS
-      Architectures:
-        - x86_64
-      Environment:
-        Variables:
-          NEPTUNE_LOADER_ENDPOINT: !Ref NeptuneLoaderEndpoint
-          NEPTUNE_LOAD_ROLE_ARN: !Ref NeptuneLoadFromS3IAMRoleArn
-          GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref NeptuneSecurityGroup
-        SubnetIds:
-          - !Ref NeptuneSubnet
+#  QueueForGraphLoadFunction:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      CodeUri: functions/load_to_graph/
+#      Handler: app.lambda_handler
+#      Runtime: python3.9
+#      Timeout: 60
+#      ReservedConcurrentExecutions: 1
+#      DeadLetterQueue:
+#        TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
+#        Type: SQS
+#      Architectures:
+#        - x86_64
+#      Environment:
+#        Variables:
+#          GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
 
   RekognitionRole:
     Type: AWS::IAM::Role
@@ -164,21 +157,21 @@ Resources:
             ]
         }
 
-  GraphLoadStagingBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      BucketName: !Sub "graph-load-staging-${AWS::AccountId}-${AWS::Region}"
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: True
-        BlockPublicPolicy: True
-        IgnorePublicAcls: True
-        RestrictPublicBuckets: True
-      VersioningConfiguration:
-        Status: Enabled
+#  GraphLoadStagingBucket:
+#    Type: AWS::S3::Bucket
+#    Properties:
+#      BucketEncryption:
+#        ServerSideEncryptionConfiguration:
+#          - ServerSideEncryptionByDefault:
+#              SSEAlgorithm: AES256
+#      BucketName: !Sub "graph-load-staging-${AWS::AccountId}-${AWS::Region}"
+#      PublicAccessBlockConfiguration:
+#        BlockPublicAcls: True
+#        BlockPublicPolicy: True
+#        IgnorePublicAcls: True
+#        RestrictPublicBuckets: True
+#      VersioningConfiguration:
+#        Status: Enabled
 
 Outputs:
   VideoProcessingStateMachineArn:

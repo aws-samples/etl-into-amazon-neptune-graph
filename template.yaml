@@ -18,15 +18,23 @@ Resources:
     Properties:
       Location: https://aws-neptune-customer-samples.s3.amazonaws.com/v2/cloudformation-templates/neptune-ml-nested-stack.json
 
-  VideoIngestStack:
+  GraphLoaderStack:
     Type: AWS::Serverless::Application
     Properties:
-      Location: VideoProcessing/template.yaml
+      Location: GraphLoader/template.yaml
       Parameters:
         NeptuneLoadFromS3IAMRoleArn: !GetAtt GraphStack.Outputs.NeptuneLoadFromS3IAMRoleArn
         NeptuneLoaderEndpoint: !GetAtt GraphStack.Outputs.LoaderEndpoint
         NeptuneSubnet: !GetAtt GraphStack.Outputs.Subnet1
         NeptuneSecurityGroup: !GetAtt GraphStack.Outputs.NeptuneSecurityGroup
+
+  VideoIngestStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: VideoProcessing/template.yaml
+      Parameters:
+        GraphLoadStagingBucket: !GetAtt GraphLoaderStack.Outputs.GraphLoadStagingBucket
+        GraphLoadQueue: !GetAtt GraphLoaderStack.Outputs.GraphLoadQueue
 
   UploadsStack:
     Type: AWS::Serverless::Application

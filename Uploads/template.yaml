@@ -18,7 +18,7 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-      BucketName: !Sub "video-ingest-${AWS::AccountId}-${AWS::Region}"
+#      BucketName: !Sub "video-ingest-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -30,7 +30,7 @@ Resources:
   UploadsDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "uploads-dead-letter-queue-${AWS::AccountId}-${AWS::Region}"
+#      QueueName: !Sub "uploads-dl-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       SqsManagedSseEnabled: true
 
   NewUploadHandler:

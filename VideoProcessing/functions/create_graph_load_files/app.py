@@ -11,8 +11,17 @@ import json
 
 graph_load_staging_bucket = os.environ["GRAPH_LOAD_STAGING_BUCKET"]
 graph_load_processing_bucket = os.environ["GRAPH_LOAD_PROCESSING_BUCKET"]
+graph_load_queue = os.environ["GRAPH_LOAD_QUEUE"]
 
 s3 = boto3.client("s3")
+sqs = boto3.client("sqs")
+
+# get the queue url
+print(f"Fetching URL for {graph_load_queue}")
+response = sqs.get_queue_url(
+    QueueName=graph_load_queue,
+)
+queue_url = response["QueueUrl"]
 
 
 class GraphLoadFiles:
@@ -139,7 +148,7 @@ def lambda_handler(event, context):
     labels = video_processing_job_data["Labels"]
 
     gl = GraphLoadFiles(event["key"])
-    nodes_by_timestamp = gl.sort_labels_by_timestamp(labels)
+    gl.sort_labels_by_timestamp(labels)
     gl.create_nodes_and_edges(video_node)
     nodes_file = gl.write_nodes()
     edges_file = gl.write_edges()
@@ -156,5 +165,12 @@ def lambda_handler(event, context):
     event["GraphDataStagingBucket"] = graph_load_staging_bucket
     event["NodesFileKey"] = nodes_file
     event["EdgesFileKey"] = edges_file
+
+    # add task to the graph loader queue for final load from these files
+
+    sqs.send_message(
+        QueueUrl=queue_url,
+        MessageBody=json.dumps(event)
+    )
 
     return event

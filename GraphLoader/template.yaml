@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  GraphLoader
+
+  Sample SAM Template for GraphLoader
+
+Parameters:
+  NeptuneLoadFromS3IAMRoleArn:
+    Type: String
+  NeptuneLoaderEndpoint:
+    Type: String
+  NeptuneSubnet:
+    Type: String
+  NeptuneSecurityGroup:
+    Type: String
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    Tracing: Active
+  Api:
+    TracingEnabled: True
+
+Resources:
+
+  GraphLoadStagingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+#      BucketName: !Sub "graph-load-staging-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+
+  GraphLoadQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+#      QueueName: !Sub "graph-loader-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+      SqsManagedSseEnabled: true
+
+  LoadToGraphDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+#      QueueName: !Sub "graph-loader-dl-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
+      SqsManagedSseEnabled: true
+
+  LoadToGraphFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/load_to_graph/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Timeout: 60
+      ReservedConcurrentExecutions: 1
+#      Events:
+#        GraphLoadEvent:
+#          Type: SQS
+#          Properties:
+#            Queue: !Ref GraphLoadQueue
+#            BatchSize: 10
+      DeadLetterQueue:
+        TargetArn: !GetAtt LoadToGraphDeadLetterQueue.Arn
+        Type: SQS
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          NEPTUNE_LOADER_ENDPOINT: !Ref NeptuneLoaderEndpoint
+          NEPTUNE_LOAD_ROLE_ARN: !Ref NeptuneLoadFromS3IAMRoleArn
+          GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref NeptuneSecurityGroup
+        SubnetIds:
+          - !Ref NeptuneSubnet
+      Policies:
+        - AmazonS3FullAccess
+        - SQSPollerPolicy:
+            QueueName: !Ref GraphLoadQueue
+
+Outputs:
+  GraphLoadStagingBucket:
+    Description: "Bucket for staging graph load files"
+    Value: !Ref GraphLoadStagingBucket
+  GraphLoadQueue:
+    Description: "Bucket for staging graph load files"
+    Value: !GetAtt GraphLoadQueue.QueueName
+
