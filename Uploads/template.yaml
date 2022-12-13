@@ -9,6 +9,9 @@ Parameters:
   VideoProcessingStateMachineArn:
     Type: String
 
+  LoggingBucketName:
+    Type: String
+
 Resources:
 
   IngestBucket:
@@ -26,6 +29,10 @@ Resources:
         RestrictPublicBuckets: True
       VersioningConfiguration:
         Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LoggingBucketName
+        LogFilePrefix: GraphETL/Video/Ingest
+
 
   UploadsDeadLetterQueue:
     Type: AWS::SQS::Queue

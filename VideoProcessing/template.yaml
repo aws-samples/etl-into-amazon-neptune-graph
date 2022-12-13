@@ -8,7 +8,11 @@ Description: >
 Parameters:
   GraphLoadStagingBucket:
     Type: String
+
   GraphLoadQueue:
+    Type: String
+
+  LoggingBucketName:
     Type: String
 
 Resources:
@@ -28,6 +32,9 @@ Resources:
         RestrictPublicBuckets: True
       VersioningConfiguration:
         Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LoggingBucketName
+        LogFilePrefix: GraphETL/Video/Ingest
 
   VideoProcessingStateMachine:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html

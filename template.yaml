@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  VideoProcessing
+  Networking stack
 
-  Sample SAM Template for VideoProcessing
+  A VPC with private and public subnets
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -13,6 +13,28 @@ Globals:
 #    TracingEnabled: True
 
 Resources:
+  LoggingStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: Common/logging.yaml
+
+  NetworkStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: Common/network.yaml
+      Parameters:
+        EnvironmentName: graph
+
+  ServiceEndpoints:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: Common/service_endpoints.yaml
+      Parameters:
+        RouteTable1: !GetAtt NetworkStack.Outputs.PrivateRouteTable1
+        RouteTable2: !GetAtt NetworkStack.Outputs.PrivateRouteTable2
+        RouteTable3: !GetAtt NetworkStack.Outputs.PublicRouteTable
+        VPCID: !GetAtt NetworkStack.Outputs.VPC
+
   GraphStack:
     Type: AWS::Serverless::Application
     Properties:
@@ -27,6 +49,7 @@ Resources:
         NeptuneLoaderEndpoint: !GetAtt GraphStack.Outputs.LoaderEndpoint
         NeptuneSubnet: !GetAtt GraphStack.Outputs.Subnet1
         NeptuneSecurityGroup: !GetAtt GraphStack.Outputs.NeptuneSecurityGroup
+        LoggingBucketName: !GetAtt LoggingStack.Outputs.BucketName
 
   VideoIngestStack:
     Type: AWS::Serverless::Application
@@ -35,6 +58,7 @@ Resources:
       Parameters:
         GraphLoadStagingBucket: !GetAtt GraphLoaderStack.Outputs.GraphLoadStagingBucket
         GraphLoadQueue: !GetAtt GraphLoaderStack.Outputs.GraphLoadQueue
+        LoggingBucketName: !GetAtt LoggingStack.Outputs.BucketName
 
   UploadsStack:
     Type: AWS::Serverless::Application
@@ -42,3 +66,4 @@ Resources:
       Location: Uploads/template.yaml
       Parameters:
         VideoProcessingStateMachineArn: !GetAtt VideoIngestStack.Outputs.VideoProcessingStateMachineArn
+        LoggingBucketName: !GetAtt LoggingStack.Outputs.BucketName

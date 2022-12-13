@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-	sam build
+	sam build -p
 
 .PHONY: deploy
 deploy: build

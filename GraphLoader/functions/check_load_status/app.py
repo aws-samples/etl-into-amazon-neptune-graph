@@ -31,6 +31,7 @@ def lambda_handler(event, context):
     load_jobs = edge_load_job_ids + node_load_job_ids
 
     event["LoadJobStatus"] = {}
+    errors = {}
 
     for load_job_id in load_jobs:
 
@@ -43,6 +44,9 @@ def lambda_handler(event, context):
         # event["LoadJobStatus"][load_job_id] = result["status"]
 
         job_status = result["payload"]["overallStatus"]["status"]
+
+        if "errors" in result["payload"].keys():
+            event["LoadErrors"][load_job_id] = result["payload"]["errors"]
 
         event["LoadJobStatus"][load_job_id] = job_status
 
@@ -70,7 +74,7 @@ def lambda_handler(event, context):
     elif len(not_started) == len(edge_load_job_ids) + len(node_load_job_ids):
         overall_status = "LOAD_NOT_STARTED"
     else:
-        raise("Invalid Job Status")
+        raise "Invalid Job Status"
 
     event["LoadJobsCompleted"] = completed
     event["LoadJobsFailed"] = failed

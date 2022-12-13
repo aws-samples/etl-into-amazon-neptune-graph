@@ -8,6 +8,7 @@ import os
 import itertools
 import csv
 import json
+from datetime import datetime
 
 graph_load_staging_bucket = os.environ["GRAPH_LOAD_STAGING_BUCKET"]
 graph_load_processing_bucket = os.environ["GRAPH_LOAD_PROCESSING_BUCKET"]
@@ -154,15 +155,19 @@ def lambda_handler(event, context):
     edges_file = gl.write_edges()
 
     # upload node and edge files to s3
+
+    timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    prefix = os.path.join("graph-load", timestamp)
     for outfile in [nodes_file, edges_file]:
         s3.upload_file(
             Filename=os.path.join("/", "tmp", outfile),
             Bucket=graph_load_staging_bucket,
-            Key=outfile,
+            Key=os.path.join(prefix, outfile)
         )
 
     # make sure the next step can find our output
     event["GraphDataStagingBucket"] = graph_load_staging_bucket
+    event["GraphDataStagingPrefix"] = prefix
     event["NodesFileKey"] = nodes_file
     event["EdgesFileKey"] = edges_file
     event["Filename"] = outfile

@@ -1,0 +1,58 @@
+Description:  This template deploys a VPC, with a pair of public and private subnets spread
+  across two Availability Zones. It deploys an internet gateway, with a default
+  route on the public subnets. It deploys a pair of NAT gateways (one in each AZ),
+  and default routes for them in the private subnets.
+
+Parameters:
+  RouteTable1:
+    Description: The first routing table to use with the vpc endpoints
+    Type: String
+
+  RouteTable2:
+    Description: The second routing table to use with the vpc endpoints
+    Type: String
+
+  RouteTable3:
+    Description: The first routing table to use with the vpc endpoints
+    Type: String
+
+  VPCID:
+    Description: The vpc where application resources run
+    Type: String
+
+
+Resources:
+  S3GatewayEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action:
+              - s3:GetObject
+              - s3:GetObjectAttributes
+              - s3:GetObjectVersion
+              - s3:GetObjectVersionAttributes
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:PutObjectVersionAcl
+            Resource:
+              - 'arn:aws:s3:::*/*'
+            Condition:
+              StringEquals:
+                'aws:PrincipalAccount': "${AWS::AccountId}"
+      RouteTableIds:
+        - !Ref RouteTable1
+        - !Ref RouteTable2
+        - !Ref RouteTable3
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref VPCID
+
+
+#Outputs:
+#  VPC:
+#    Description: A reference to the created VPC
+#    Value: !Ref VPC
+

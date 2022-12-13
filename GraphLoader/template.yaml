@@ -8,11 +8,17 @@ Description: >
 Parameters:
   NeptuneLoadFromS3IAMRoleArn:
     Type: String
+
   NeptuneLoaderEndpoint:
     Type: String
+
   NeptuneSubnet:
     Type: String
+
   NeptuneSecurityGroup:
+    Type: String
+
+  LoggingBucketName:
     Type: String
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -81,6 +87,9 @@ Resources:
         RestrictPublicBuckets: True
       VersioningConfiguration:
         Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LoggingBucketName
+        LogFilePrefix: GraphETL/Video/Ingest
 
   GraphLoadQueue:
     Type: AWS::SQS::Queue
