@@ -12,8 +12,16 @@ Parameters:
   LoggingBucketName:
     Type: String
 
-Resources:
+  VPC:
+    Type: String
 
+  PrivateSubnet1:
+    Type: String
+
+  PrivateSubnet2:
+    Type: String
+
+Resources:
   IngestBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -21,7 +29,6 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-#      BucketName: !Sub "video-ingest-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -33,12 +40,22 @@ Resources:
         DestinationBucketName: !Ref LoggingBucketName
         LogFilePrefix: GraphETL/Video/Ingest
 
-
   UploadsDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-#      QueueName: !Sub "uploads-dl-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       SqsManagedSseEnabled: true
+
+  UploadsHandlerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for the uploads handler function
+      GroupName: UploadsHandlerSecurityGroup
+#      SecurityGroupEgress:
+#        - Egress
+#      SecurityGroupIngress:
+#        - Ingress
+      VpcId: !Ref VPC
+
 
   NewUploadHandler:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -64,3 +81,9 @@ Resources:
           VIDEO_PROCESSING_STEP_FUNCTION_ARN: !Ref VideoProcessingStateMachineArn
       Policies:
         - AWSStepFunctionsFullAccess
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref UploadsHandlerSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2

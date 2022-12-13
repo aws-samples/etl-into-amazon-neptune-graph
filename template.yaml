@@ -67,3 +67,6 @@ Resources:
       Parameters:
         VideoProcessingStateMachineArn: !GetAtt VideoIngestStack.Outputs.VideoProcessingStateMachineArn
         LoggingBucketName: !GetAtt LoggingStack.Outputs.BucketName
+        VPC: !GetAtt NetworkStack.Outputs.VPC
+        PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2

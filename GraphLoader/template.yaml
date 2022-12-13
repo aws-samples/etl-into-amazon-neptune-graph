@@ -79,7 +79,6 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-#      BucketName: !Sub "graph-load-staging-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -89,24 +88,21 @@ Resources:
         Status: Enabled
       LoggingConfiguration:
         DestinationBucketName: !Ref LoggingBucketName
-        LogFilePrefix: GraphETL/Video/Ingest
+        LogFilePrefix: GraphETL/Video/GraphLoad
 
   GraphLoadQueue:
     Type: AWS::SQS::Queue
     Properties:
-#      QueueName: !Sub "graph-loader-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       SqsManagedSseEnabled: true
 
   GraphLoadTriggerDeadLetterLoadQueue:
     Type: AWS::SQS::Queue
     Properties:
-      #      QueueName: !Sub "graph-loader-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       SqsManagedSseEnabled: true
 
 #  LoadToGraphDeadLetterQueue:
 #    Type: AWS::SQS::Queue
 #    Properties:
-##      QueueName: !Sub "graph-loader-dl-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
 #      SqsManagedSseEnabled: true
 
   GraphLoadFunction:
