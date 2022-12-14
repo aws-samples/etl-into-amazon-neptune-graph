@@ -15,6 +15,15 @@ Parameters:
   LoggingBucketName:
     Type: String
 
+  VPC:
+    Type: String
+
+  PrivateSubnet1:
+    Type: String
+
+  PrivateSubnet2:
+    Type: String
+
 Resources:
 
   GraphLoadProcessingBucket:
@@ -24,7 +33,6 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-#      BucketName: !Sub "graph-load-processing-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -44,7 +52,6 @@ Resources:
         StartRekognitionJobFunctionArn: !GetAtt StartRekognitionJobFunction.Arn
         CheckRekognitionResultsFunctionArn: !GetAtt CheckRekognitionResultsFunction.Arn
         CreateGraphLoadFilesFunctionArn: !GetAtt CreateGraphLoadFilesFunction.Arn
-#        LoadToGraphFunctionArn: !GetAtt LoadToGraphFunction.Arn
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref StartRekognitionJobFunction
@@ -56,8 +63,18 @@ Resources:
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-#      QueueName: !Sub "video-processing-dead-letter-queue-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}"
       SqsManagedSseEnabled: true
+
+  ProcessingSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for the processing handler function
+      GroupName: ProcessingSecurityGroup
+      #      SecurityGroupEgress:
+      #        - Egress
+      #      SecurityGroupIngress:
+      #        - Ingress
+      VpcId: !Ref VPC
 
   StartRekognitionJobFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -79,6 +96,12 @@ Resources:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
         - AmazonSQSFullAccess
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref ProcessingSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
 
   CheckRekognitionResultsFunction:
     Type: AWS::Serverless::Function
@@ -99,6 +122,12 @@ Resources:
       Environment:
         Variables:
           GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref ProcessingSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
 
   CreateGraphLoadFilesFunction:
     Type: AWS::Serverless::Function
@@ -123,23 +152,12 @@ Resources:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
           GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
           GRAPH_LOAD_QUEUE: !Ref GraphLoadQueue
-
-#  QueueForGraphLoadFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      CodeUri: functions/load_to_graph/
-#      Handler: app.lambda_handler
-#      Runtime: python3.9
-#      Timeout: 60
-#      ReservedConcurrentExecutions: 1
-#      DeadLetterQueue:
-#        TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
-#        Type: SQS
-#      Architectures:
-#        - x86_64
-#      Environment:
-#        Variables:
-#          GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref ProcessingSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
 
   RekognitionRole:
     Type: AWS::IAM::Role
@@ -161,22 +179,6 @@ Resources:
                 }
             ]
         }
-
-#  GraphLoadStagingBucket:
-#    Type: AWS::S3::Bucket
-#    Properties:
-#      BucketEncryption:
-#        ServerSideEncryptionConfiguration:
-#          - ServerSideEncryptionByDefault:
-#              SSEAlgorithm: AES256
-#      BucketName: !Sub "graph-load-staging-${AWS::AccountId}-${AWS::Region}"
-#      PublicAccessBlockConfiguration:
-#        BlockPublicAcls: True
-#        BlockPublicPolicy: True
-#        IgnorePublicAcls: True
-#        RestrictPublicBuckets: True
-#      VersioningConfiguration:
-#        Status: Enabled
 
 Outputs:
   VideoProcessingStateMachineArn:

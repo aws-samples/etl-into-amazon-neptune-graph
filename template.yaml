@@ -33,7 +33,7 @@ Resources:
         RouteTable1: !GetAtt NetworkStack.Outputs.PrivateRouteTable1
         RouteTable2: !GetAtt NetworkStack.Outputs.PrivateRouteTable2
         RouteTable3: !GetAtt NetworkStack.Outputs.PublicRouteTable
-        VPCID: !GetAtt NetworkStack.Outputs.VPC
+        VPC: !GetAtt NetworkStack.Outputs.VPC
 
   GraphStack:
     Type: AWS::Serverless::Application
@@ -50,6 +50,9 @@ Resources:
         NeptuneSubnet: !GetAtt GraphStack.Outputs.Subnet1
         NeptuneSecurityGroup: !GetAtt GraphStack.Outputs.NeptuneSecurityGroup
         LoggingBucketName: !GetAtt LoggingStack.Outputs.BucketName
+        VPC: !GetAtt NetworkStack.Outputs.VPC
+        PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
 
   VideoIngestStack:
     Type: AWS::Serverless::Application
@@ -59,6 +62,9 @@ Resources:
         GraphLoadStagingBucket: !GetAtt GraphLoaderStack.Outputs.GraphLoadStagingBucket
         GraphLoadQueue: !GetAtt GraphLoaderStack.Outputs.GraphLoadQueue
         LoggingBucketName: !GetAtt LoggingStack.Outputs.BucketName
+        VPC: !GetAtt NetworkStack.Outputs.VPC
+        PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
 
   UploadsStack:
     Type: AWS::Serverless::Application

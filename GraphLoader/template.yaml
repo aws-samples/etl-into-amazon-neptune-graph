@@ -21,6 +21,15 @@ Parameters:
   LoggingBucketName:
     Type: String
 
+  VPC:
+    Type: String
+
+  PrivateSubnet1:
+    Type: String
+
+  PrivateSubnet2:
+    Type: String
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -38,12 +47,22 @@ Resources:
       DefinitionSubstitutions:
         GraphLoadFunctionArn: !GetAtt GraphLoadFunction.Arn
         CheckGraphLoadStatusFunctionArn: !GetAtt CheckGraphLoadStatusFunction.Arn
-      #        LoadToGraphFunctionArn: !GetAtt LoadToGraphFunction.Arn
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref GraphLoadFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckGraphLoadStatusFunction
+
+  GraphLoadSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for the graph load function
+      GroupName: GraphLoadSecurityGroup
+      #      SecurityGroupEgress:
+      #        - Egress
+      #      SecurityGroupIngress:
+      #        - Ingress
+      VpcId: !Ref VPC
 
   GraphLoadStateMachineTrigger:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -71,6 +90,12 @@ Resources:
         - AWSStepFunctionsFullAccess
         - AmazonSQSFullAccess
         - AWSLambdaBasicExecutionRole
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref GraphLoadSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
 
   GraphLoadStagingBucket:
     Type: AWS::S3::Bucket

@@ -3,6 +3,7 @@ from random import randint
 from uuid import uuid4
 import boto3
 import hashlib
+import shortuuid
 
 import os
 import itertools
@@ -29,34 +30,48 @@ class GraphLoadFiles:
     def __init__(self, source_name):
         self.source_name = source_name
         self.nodes = []
+        self.node_ids = []
         self.edges = []
+        self.edge_ids = []
         self.nodes_by_timestamp = {}  # key will be timestamp, value will be list of Labels
 
-    def create_node(self, node):
-        print(f"Creating node: {node['Name']}")
-        node["id"] = self.get_node_id(node)
+    def create_node(self, node, node_type="OBJECT"):
+        node_id = self.get_node_id(node)
+        if node_id in self.node_ids:
+            print(f"Skipping existing node with id {node_id}")
+        else:
+            print(f"Creating node: {node['Name']}")
+            node["id"] = node_id
 
-        parent_names = [ parent["Name"] for parent in node["Parents"] ]
+            parent_names = [ parent["Name"] for parent in node["Parents"] ]
 
-        node_dict = {
-            ":ID": self.get_node_id(node),
-            ":Label": node["Name"],
-            "confidence:Float": node["Confidence"],
-            "parents:String":  ", ".join(parent_names),
-        }
-        self.nodes.append(node_dict)
+            node_dict = {
+                ":ID": node_id,
+                ":Label": node["Name"],
+                "Confidence:Float": node["Confidence"],
+                "Parents:String":  ", ".join(parent_names),
+                ":TYPE": node_type
+            }
+            self.nodes.append(node_dict)
+            self.node_ids.append(node_id)
 
-    def create_edge(self, node1, node2, edge_type):
+    def create_edge(self, node1, node2, edge_type, content_tag):
+        edge_id = self.get_edge_id(node1, node2, edge_type, shortuuid.uuid())
+        # if edge_id in self.edge_ids:
+        #     print(f"Skipping existing edge with id {edge_id}")
+        # else:
         node1_id = self.get_node_id(node1)
         node2_id = self.get_node_id(node2)
         edge_dict = {
             ":ID": self.get_edge_id(node1, node2, edge_type),
             ":START_ID": node1_id,
             ":END_ID": node2_id,
-            ":TYPE": edge_type
+            ":TYPE": edge_type,
+            # "CONTENT_TAG": content_tag,
         }
         self.edges.append(edge_dict)
         print(f"Created {edge_type} edge between {node1['Name']} and {node2['Name']}")
+        self.edge_ids.append(edge_id)
 
     def get_node_id(self, node):
         node_name = node["Name"]
@@ -66,8 +81,8 @@ class GraphLoadFiles:
         node_id = m.hexdigest()
         return node_id
 
-    def get_edge_id(self, node1, node2, edge_type):
-        estring = f"{node1['Name']}-{edge_type}-{node2['Name']}"
+    def get_edge_id(self, node1, node2, edge_type, salt=""):
+        estring = f"{node1['Name']}-{edge_type}-{node2['Name']}-{salt}"
         m = hashlib.new('md5', 
             usedforsecurity=False)
         m.update(estring.encode())
@@ -83,27 +98,28 @@ class GraphLoadFiles:
         return self.nodes_by_timestamp
 
     def create_nodes_and_edges(self, root_node):
+        self.create_node(root_node, node_type="VIDEO")
         for timestamp in self.nodes_by_timestamp.keys():
             labels = [it["Label"] for it in self.nodes_by_timestamp[timestamp]]
             for label in labels:
                 self.create_node(label)
-                self.create_edge(label, root_node, "APPEARS_IN")
+                self.create_edge(label, root_node, "APPEARS_IN", root_node["Name"])
             for e1, e2 in itertools.combinations(labels, 2):
-                self.create_edge(e1, e2, "APPEARS_WITH")
+                self.create_edge(e1, e2, "APPEARS_WITH", root_node["Name"])
 
     def write_nodes(self):
         outfile_path = f"{self.source_name}-nodes.csv"
-        node_columns = [":ID", ":Label", "confidence:Float", "parents:String"]
+        node_columns = [":ID", ":Label", "Confidence:Float", "Parents:String" , ":TYPE"]
         print(f"Node Columns: {node_columns}")
         with open(os.path.join("/", "tmp", outfile_path), "w") as output_file:
-            dict_writer = csv.DictWriter(output_file, node_columns)
+            dict_writer = csv.DictWriter(output_file, fieldnames=node_columns)
             dict_writer.writeheader()
             dict_writer.writerows(self.nodes)
         return outfile_path
 
     def write_edges(self):
         outfile_path = f"{self.source_name}-edges.csv"
-        edge_columns = [":ID", ":START_ID", ":END_ID", ":TYPE"]
+        edge_columns = [":ID", ":START_ID", ":END_ID", ":TYPE"] #, "CONTENT_TAG:String"]
         print(f"Edge Columns: {edge_columns}")
         with open(os.path.join("/", "tmp", outfile_path), "w") as output_file:
             dict_writer = csv.DictWriter(output_file, edge_columns)
@@ -133,11 +149,12 @@ def lambda_handler(event, context):
 
     # Put the video name in a 'nodes'ish object
     video_node = {
-        "Type": "Video",
-        "Name": event["key"]
+        "Name": event["key"],
+        "Parents": [],
+        "Confidence": 1.0
     }
 
-    # Wrtie node and edge files from detected labels
+    # Write node and edge files from detected labels
 
     # video_processing_job_data = event["LabelDetectionData"]
     response = s3.get_object(
@@ -172,7 +189,7 @@ def lambda_handler(event, context):
     event["EdgesFileKey"] = edges_file
     event["Filename"] = outfile
 
-    # add task to the graph loader queue for final load from these files
+    # add task to the graph loader queue for final load from these files to Neptune
 
     sqs.send_message(
         QueueUrl=queue_url,

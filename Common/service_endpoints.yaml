@@ -16,7 +16,7 @@ Parameters:
     Description: The first routing table to use with the vpc endpoints
     Type: String
 
-  VPCID:
+  VPC:
     Description: The vpc where application resources run
     Type: String
 
@@ -37,18 +37,19 @@ Resources:
               - s3:GetObjectVersionAttributes
               - s3:PutObject
               - s3:PutObjectAcl
+              - s3:PutObjectVersion
               - s3:PutObjectVersionAcl
             Resource:
               - 'arn:aws:s3:::*/*'
-            Condition:
-              StringEquals:
-                'aws:PrincipalAccount': "${AWS::AccountId}"
+#            Condition:
+#              StringEquals:
+#                'aws:PrincipalAccount': "${AWS::AccountId}"
       RouteTableIds:
         - !Ref RouteTable1
         - !Ref RouteTable2
         - !Ref RouteTable3
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
-      VpcId: !Ref VPCID
+      VpcId: !Ref VPC
 
 
 #Outputs:
