@@ -85,6 +85,7 @@ def lambda_handler(event, context):
 
     if load_failed:
         event["LoadStatus"] = "FAILED"
+        event["LoadDetails"] = result["payload"]
     elif overall_status == "COMPLETE":
         event["LoadStatus"] = "COMPLETE"
     else:

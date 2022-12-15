@@ -98,12 +98,12 @@ class GraphLoadFiles:
         return self.nodes_by_timestamp
 
     def create_nodes_and_edges(self, root_node):
-        self.create_node(root_node, node_type="VIDEO")
+        # self.create_node(root_node, node_type="VIDEO")
         for timestamp in self.nodes_by_timestamp.keys():
             labels = [it["Label"] for it in self.nodes_by_timestamp[timestamp]]
             for label in labels:
                 self.create_node(label)
-                self.create_edge(label, root_node, "APPEARS_IN", root_node["Name"])
+                # self.create_edge(label, root_node, "APPEARS_IN", root_node["Name"])
             for e1, e2 in itertools.combinations(labels, 2):
                 self.create_edge(e1, e2, "APPEARS_WITH", root_node["Name"])
 
@@ -151,7 +151,7 @@ def lambda_handler(event, context):
     video_node = {
         "Name": event["key"],
         "Parents": [],
-        "Confidence": 1.0
+        "Confidence": 100.0
     }
 
     # Write node and edge files from detected labels

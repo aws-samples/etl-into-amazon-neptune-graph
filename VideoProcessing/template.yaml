@@ -24,6 +24,9 @@ Parameters:
   PrivateSubnet2:
     Type: String
 
+  PowertoolsLayer:
+    Type: String
+
 Resources:
 
   GraphLoadProcessingBucket:
@@ -102,6 +105,8 @@ Resources:
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
+      Layers:
+        - !Ref PowertoolsLayer
 
   CheckRekognitionResultsFunction:
     Type: AWS::Serverless::Function
@@ -128,6 +133,8 @@ Resources:
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
+      Layers:
+        - !Ref PowertoolsLayer
 
   CreateGraphLoadFilesFunction:
     Type: AWS::Serverless::Function
@@ -158,6 +165,8 @@ Resources:
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
+      Layers:
+        - !Ref PowertoolsLayer
 
   RekognitionRole:
     Type: AWS::IAM::Role

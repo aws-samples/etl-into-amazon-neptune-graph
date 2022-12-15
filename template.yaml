@@ -13,6 +13,11 @@ Globals:
 #    TracingEnabled: True
 
 Resources:
+  LambdaLayers:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: Common/layers.yaml
+
   LoggingStack:
     Type: AWS::Serverless::Application
     Properties:
@@ -53,6 +58,7 @@ Resources:
         VPC: !GetAtt NetworkStack.Outputs.VPC
         PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
+        PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer
 
   VideoIngestStack:
     Type: AWS::Serverless::Application
@@ -65,6 +71,7 @@ Resources:
         VPC: !GetAtt NetworkStack.Outputs.VPC
         PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
+        PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer
 
   UploadsStack:
     Type: AWS::Serverless::Application
@@ -76,3 +83,4 @@ Resources:
         VPC: !GetAtt NetworkStack.Outputs.VPC
         PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
+        PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer

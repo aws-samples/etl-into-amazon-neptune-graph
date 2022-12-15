@@ -24,7 +24,7 @@ def lambda_handler(event, context):
     response = step_functions.start_execution(
         stateMachineArn=step_function_arn,
         input=json.dumps(event),
-        name=shortuuid.uuid() # batch of items, each item was named by its filename coming in to avoid reporocessing
+        name=shortuuid.uuid() # batch of items, each item was named by its filename coming in to avoid reprocessing
     )
     print(response)
 

@@ -21,6 +21,9 @@ Parameters:
   PrivateSubnet2:
     Type: String
 
+  PowertoolsLayer:
+    Type: String
+
 Resources:
   IngestBucket:
     Type: AWS::S3::Bucket
@@ -87,3 +90,5 @@ Resources:
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
+      Layers:
+        - !Ref PowertoolsLayer

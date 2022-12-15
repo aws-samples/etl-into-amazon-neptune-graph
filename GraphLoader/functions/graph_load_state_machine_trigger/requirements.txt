@@ -1,4 +1,3 @@
 requests
-aws-lambda-powertools
 aws-xray-sdk
 shortuuid

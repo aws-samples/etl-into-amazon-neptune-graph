@@ -30,6 +30,9 @@ Parameters:
   PrivateSubnet2:
     Type: String
 
+  PowertoolsLayer:
+    Type: String
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -96,6 +99,8 @@ Resources:
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
+      Layers:
+        - !Ref PowertoolsLayer
 
   GraphLoadStagingBucket:
     Type: AWS::S3::Bucket
@@ -156,6 +161,8 @@ Resources:
       Policies:
         - AmazonS3FullAccess
 #        - AmazonSQSFullAccess
+      Layers:
+        - !Ref PowertoolsLayer
 
   CheckGraphLoadStatusFunction:
     Type: AWS::Serverless::Function
@@ -181,6 +188,8 @@ Resources:
           - !Ref NeptuneSubnet
 #      Policies:
 #        - AmazonS3FullAccess
+      Layers:
+        - !Ref PowertoolsLayer
 
 Outputs:
   GraphLoadStagingBucket:

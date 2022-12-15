@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description:  This template manages Lambda Layers that are used by functions in this project
+
+Resources:
+  PowertoolsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: layers/powertools
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: makefile
+
+Outputs:
+  PowertoolsLayer:
+    Description: The ARN of the Powertools Layer
+    Value: !Ref PowertoolsLayer
+
