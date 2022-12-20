@@ -61,10 +61,6 @@ Resources:
     Properties:
       GroupDescription: Security group for the graph load function
       GroupName: GraphLoadSecurityGroup
-      #      SecurityGroupEgress:
-      #        - Egress
-      #      SecurityGroupIngress:
-      #        - Ingress
       VpcId: !Ref VPC
 
   GraphLoadStateMachineTrigger:
@@ -130,11 +126,6 @@ Resources:
     Properties:
       SqsManagedSseEnabled: true
 
-#  LoadToGraphDeadLetterQueue:
-#    Type: AWS::SQS::Queue
-#    Properties:
-#      SqsManagedSseEnabled: true
-
   GraphLoadFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -143,9 +134,6 @@ Resources:
       Runtime: python3.9
       Timeout: 60
       ReservedConcurrentExecutions: 1
-#      DeadLetterQueue:
-#        TargetArn: !GetAtt LoadToGraphDeadLetterQueue.Arn
-#        Type: SQS
       Architectures:
         - x86_64
       Environment:
@@ -160,7 +148,6 @@ Resources:
           - !Ref NeptuneSubnet
       Policies:
         - AmazonS3FullAccess
-#        - AmazonSQSFullAccess
       Layers:
         - !Ref PowertoolsLayer
 
@@ -172,9 +159,6 @@ Resources:
       Runtime: python3.9
       Timeout: 60
       ReservedConcurrentExecutions: 1
-#      DeadLetterQueue:
-#        TargetArn: !GetAtt LoadToGraphDeadLetterQueue.Arn
-#        Type: SQS
       Architectures:
         - x86_64
       Environment:
@@ -186,8 +170,6 @@ Resources:
           - !Ref NeptuneSecurityGroup
         SubnetIds:
           - !Ref NeptuneSubnet
-#      Policies:
-#        - AmazonS3FullAccess
       Layers:
         - !Ref PowertoolsLayer
 

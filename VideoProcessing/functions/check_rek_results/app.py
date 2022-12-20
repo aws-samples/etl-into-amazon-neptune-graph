@@ -1,10 +1,6 @@
-from datetime import datetime
-from random import randint
-from uuid import uuid4
 import os
 import boto3
 import json
-import io
 
 graph_load_processing_bucket = os.environ["GRAPH_LOAD_PROCESSING_BUCKET"]
 

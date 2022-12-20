@@ -9,8 +9,6 @@ Description: >
 Globals:
   Function:
     Tracing: Active
-#  Api:
-#    TracingEnabled: True
 
 Resources:
   LambdaLayers:
