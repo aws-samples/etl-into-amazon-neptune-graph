@@ -36,14 +36,14 @@ def lambda_handler(event, context):
 
         # Load the nodes
         nodes_payload = {
-            "source": f"s3://{load_request_event['GraphDataStagingBucket']}/{load_request_event['GraphDataStagingPrefix']}",
+            "source": f"s3://{load_request_event['GraphDataStagingBucket']}/{load_request_event['GraphDataStagingPrefix']}/{load_request_event['NodesFileKey']}",
             "format": "opencypher",
             "iamRoleArn": neptune_loader_role,
             "region": aws_region,
             "failOnError": "FALSE",
             "parallelism": "MEDIUM",
-            "updateSingleCardinalityProperties": "FALSE",
-            "queueRequest": "TRUE"
+            "updateSingleCardinalityProperties": "TRUE",
+            "queueRequest": "TRUE",
         }
 
         response = requests.post(neptune_loader_endpoint, nodes_payload)
@@ -58,28 +58,28 @@ def lambda_handler(event, context):
         node_load_job_ids.append(nodes_load_id)
 
         # load the edges
-        # edges_payload = {
-        #     "source": f"s3://{load_request_event['GraphDataStagingBucket']}/{load_request_event['EdgesFileKey']}",
-        #     "format": "opencypher",
-        #     "iamRoleArn": neptune_loader_role,
-        #     "region": aws_region,
-        #     "failOnError": "FALSE",
-        #     "parallelism": "MEDIUM",
-        #     "updateSingleCardinalityProperties": "FALSE",
-        #     "queueRequest": "TRUE",
-        #     "dependencies": f"[\"{nodes_load_id}\"]"
-        # }
-        #
-        # response = requests.post(neptune_loader_endpoint, edges_payload)
-        # print(response.text)
-        #
-        # result = json.loads(response.content)
-        #
-        # if not result["status"] == "200 OK":
-        #     raise(Exception(f"Failed to load edges"))
-        #
-        # edges_load_id = result["payload"]["loadId"]
-        # edge_load_job_ids.append(edges_load_id) #
+        edges_payload = {
+            "source": f"s3://{load_request_event['GraphDataStagingBucket']}/{load_request_event['GraphDataStagingPrefix']}/{load_request_event['EdgesFileKey']}",
+            "format": "opencypher",
+            "iamRoleArn": neptune_loader_role,
+            "region": aws_region,
+            "failOnError": "FALSE",
+            "parallelism": "MEDIUM",
+            "updateSingleCardinalityProperties": "TRUE",
+            "queueRequest": "TRUE",
+            "dependencies": f"[\"{nodes_load_id}\"]"
+        }
+
+        response = requests.post(neptune_loader_endpoint, edges_payload)
+        print(response.text)
+
+        result = json.loads(response.content)
+
+        if not result["status"] == "200 OK":
+            raise(Exception(f"Failed to load edges"))
+
+        edges_load_id = result["payload"]["loadId"]
+        edge_load_job_ids.append(edges_load_id) #
 
     event["EdgeLoadJobIds"] = edge_load_job_ids
     event["NodeLoadJobIds"] = node_load_job_ids

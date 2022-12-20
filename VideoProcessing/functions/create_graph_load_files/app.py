@@ -67,7 +67,7 @@ class GraphLoadFiles:
             ":START_ID": node1_id,
             ":END_ID": node2_id,
             ":TYPE": edge_type,
-            # "CONTENT_TAG": content_tag,
+            "CONTENT_TAG:String": content_tag,
         }
         self.edges.append(edge_dict)
         print(f"Created {edge_type} edge between {node1['Name']} and {node2['Name']}")
@@ -98,12 +98,12 @@ class GraphLoadFiles:
         return self.nodes_by_timestamp
 
     def create_nodes_and_edges(self, root_node):
-        # self.create_node(root_node, node_type="VIDEO")
+        self.create_node(root_node, node_type="VIDEO")
         for timestamp in self.nodes_by_timestamp.keys():
             labels = [it["Label"] for it in self.nodes_by_timestamp[timestamp]]
             for label in labels:
                 self.create_node(label)
-                # self.create_edge(label, root_node, "APPEARS_IN", root_node["Name"])
+                self.create_edge(label, root_node, "APPEARS_IN", root_node["Name"])
             for e1, e2 in itertools.combinations(labels, 2):
                 self.create_edge(e1, e2, "APPEARS_WITH", root_node["Name"])
 
@@ -119,7 +119,7 @@ class GraphLoadFiles:
 
     def write_edges(self):
         outfile_path = f"{self.source_name}-edges.csv"
-        edge_columns = [":ID", ":START_ID", ":END_ID", ":TYPE"] #, "CONTENT_TAG:String"]
+        edge_columns = [":ID", ":START_ID", ":END_ID", ":TYPE", "CONTENT_TAG:String"]
         print(f"Edge Columns: {edge_columns}")
         with open(os.path.join("/", "tmp", outfile_path), "w") as output_file:
             dict_writer = csv.DictWriter(output_file, edge_columns)
@@ -187,7 +187,6 @@ def lambda_handler(event, context):
     event["GraphDataStagingPrefix"] = prefix
     event["NodesFileKey"] = nodes_file
     event["EdgesFileKey"] = edges_file
-    event["Filename"] = outfile
 
     # add task to the graph loader queue for final load from these files to Neptune
 
