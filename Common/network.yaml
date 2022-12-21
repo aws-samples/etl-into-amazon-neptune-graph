@@ -44,6 +44,46 @@ Resources:
         - Key: Name
           Value: !Ref EnvironmentName
 
+  VpcFlowLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "vpc-flow-logs.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      Description: Allows VPC FlowLogs to be written to CloudWatch
+      Policies:
+        - PolicyName: AllowFlowLogs
+          PolicyDocument:
+            "Version": "2012-10-17"
+            "Statement":
+                - "Effect": "Allow"
+                  "Action":
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                    - "logs:DescribeLogGroups"
+                    - "logs:DescribeLogStreams"
+                  "Resource": "*"
+
+  VpcFlowLog:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt VpcFlowLogRole.Arn
+      LogGroupName: !Sub "ETL-${AWS::Region}-${AWS::StackName}"
+      ResourceId: !Ref VPC
+      ResourceType: VPC
+      TrafficType: ALL
+
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
