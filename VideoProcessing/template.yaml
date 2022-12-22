@@ -27,6 +27,12 @@ Parameters:
   PowertoolsLayer:
     Type: String
 
+  MasterKey:
+    Type: String
+
+#  MasterKeyUserPolicy:
+#    Type: String
+
 Resources:
 
   GraphLoadProcessingBucket:
@@ -66,7 +72,8 @@ Resources:
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      SqsManagedSseEnabled: true
+      KmsMasterKeyId: !Ref MasterKey
+#      SqsManagedSseEnabled: true
 
   ProcessingSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -91,6 +98,7 @@ Resources:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
         Type: SQS
       ReservedConcurrentExecutions: 1
+      KmsKeyArn: !Ref MasterKey
       Timeout: 15
       Architectures:
         - x86_64
@@ -120,6 +128,7 @@ Resources:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
         Type: SQS
       ReservedConcurrentExecutions: 1
+      KmsKeyArn: !Ref MasterKey
       Timeout: 60
       Architectures:
         - x86_64
@@ -145,6 +154,7 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       ReservedConcurrentExecutions: 1
+      KmsKeyArn: !Ref MasterKey
       DeadLetterQueue:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
         Type: SQS
@@ -156,6 +166,11 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !Ref GraphLoadQueue
         - AmazonSQSFullAccess
+        - Statement:
+            Effect: Allow
+            Action: "kms:*"
+            Resource: !Ref MasterKey
+#        - !Ref MasterKeyUserPolicy
       Environment:
         Variables:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket

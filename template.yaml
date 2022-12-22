@@ -28,6 +28,11 @@ Resources:
       Parameters:
         EnvironmentName: graph
 
+  Security:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: Common/security.yaml
+
   ServiceEndpoints:
     Type: AWS::Serverless::Application
     Properties:
@@ -60,6 +65,7 @@ Resources:
         PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
         PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer
+        MasterKey: !GetAtt Security.Outputs.MasterKey
 
   VideoIngestStack:
     Type: AWS::Serverless::Application
@@ -73,6 +79,8 @@ Resources:
         PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
         PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer
+        MasterKey: !GetAtt Security.Outputs.MasterKey
+#        MasterKeyUserPolicy: !GetAtt Security.Outputs.MasterKeyUserPolicy
 
   UploadsStack:
     Type: AWS::Serverless::Application
@@ -85,3 +93,4 @@ Resources:
         PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
         PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer
+        MasterKey: !GetAtt Security.Outputs.MasterKey
