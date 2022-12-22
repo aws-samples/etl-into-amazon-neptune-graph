@@ -23,31 +23,7 @@ Resources:
       KeySpec: SYMMETRIC_DEFAULT
       KeyUsage: ENCRYPT_DECRYPT
 
-#  MasterKeyUserGroup:
-#    Type: AWS::IAM::Group
-#    Properties:
-#      GroupName: !Sub "EtlMasterKeyGroup-${AWS::Region}-{AWS::StackName}"
-#      ManagedPolicyArns:
-#        - String
-#      Path: String
-#      Policies:
-#        - Policy
-
-#  MasterKeyUserPolicy:
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      PolicyName: !Sub "EtlMasterKeyPolicy-${AWS::Region}-{AWS::StackName}"
-#      PolicyDocument:
-#        Version: "2012-10-27"
-#        Statement:
-#          - Effect: Allow
-#            Action: "kms:*"
-#            Resource: !Ref MasterKmsKey
-
 Outputs:
   MasterKey:
     Description: A reference to the KMS Master Key
     Value: !GetAtt MasterKmsKey.Arn
-#  KeyUserPolicy:
-#    Description: IAM Policy to use this key
-#    Value: !Ref MasterKeyUserPolicy

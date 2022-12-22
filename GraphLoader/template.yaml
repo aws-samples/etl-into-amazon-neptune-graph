@@ -127,13 +127,11 @@ Resources:
   GraphLoadQueue:
     Type: AWS::SQS::Queue
     Properties:
-#      SqsManagedSseEnabled: true
       KmsMasterKeyId: !Ref MasterKey
 
   GraphLoadTriggerDeadLetterLoadQueue:
     Type: AWS::SQS::Queue
     Properties:
-#      SqsManagedSseEnabled: true
       KmsMasterKeyId: !Ref MasterKey
 
   GraphLoadFunction:

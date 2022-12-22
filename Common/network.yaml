@@ -61,19 +61,6 @@ Resources:
           ]
         }
       Description: Allows VPC FlowLogs to be written to CloudWatch
-#      Policies:
-#        - PolicyName: AllowFlowLogs
-#          PolicyDocument:
-#            "Version": "2012-10-17"
-#            "Statement":
-#                - "Effect": "Allow"
-#                  "Action":
-#                    - "logs:CreateLogGroup"
-#                    - "logs:CreateLogStream"
-#                    - "logs:PutLogEvents"
-#                    - "logs:DescribeLogGroups"
-#                    - "logs:DescribeLogStreams"
-#                  "Resource": !Ref VpcFlowLog
 
   AllowFlowLogsPolicy:
     Type: AWS::IAM::Policy

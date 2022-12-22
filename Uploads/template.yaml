@@ -50,7 +50,6 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       KmsMasterKeyId: !Ref MasterKey
-#      SqsManagedSseEnabled: true
 
   UploadsHandlerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -58,7 +57,6 @@ Resources:
       GroupDescription: Security group for the uploads handler function
       GroupName: UploadsHandlerSecurityGroup
       VpcId: !Ref VPC
-
 
   NewUploadHandler:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
