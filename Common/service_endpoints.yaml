@@ -16,8 +16,20 @@ Parameters:
     Description: The first routing table to use with the vpc endpoints
     Type: String
 
+  Subnet1:
+    Description: The subnet where the sqs endpoint is deployed
+    Type: String
+
+  Subnet2:
+    Description: The second subnet where the sqs endpoint is deployed
+    Type: String
+
   VPC:
     Description: The vpc where application resources run
+    Type: String
+
+  VPCCidrBlock:
+    Description: The cidr block for the VPC
     Type: String
 
 
@@ -50,6 +62,64 @@ Resources:
         - !Ref RouteTable3
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
       VpcId: !Ref VPC
+
+  InterfaceEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for the processing handler function
+#      GroupName: ProcessingSecurityGroup
+#      SecurityGroupEgress:
+#        - Description: Allow all outbound traffic
+#          IpProtocol: "-1"
+#          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+        - Description: Allow traffic from the VPC
+          IpProtocol: "-1"
+          CidrIp: !Ref VPCCidrBlock
+        - Description: Allow all traffic
+          IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VPC
+
+  SQSInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.sqs'
+      VpcId: !Ref VPC
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref InterfaceEndpointSecurityGroup
+      SubnetIds:
+        - !Ref Subnet1
+        - !Ref Subnet2
+
+  StepFunctionsInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.states'
+      VpcId: !Ref VPC
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref InterfaceEndpointSecurityGroup
+      SubnetIds:
+        - !Ref Subnet1
+        - !Ref Subnet2
+
+  RekognitionInterfaceEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.rekognition'
+      VpcId: !Ref VPC
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref InterfaceEndpointSecurityGroup
+      SubnetIds:
+        - !Ref Subnet1
+        - !Ref Subnet2
+
 
 
 #Outputs:

@@ -36,7 +36,10 @@ Resources:
         RouteTable1: !GetAtt NetworkStack.Outputs.PrivateRouteTable1
         RouteTable2: !GetAtt NetworkStack.Outputs.PrivateRouteTable2
         RouteTable3: !GetAtt NetworkStack.Outputs.PublicRouteTable
+        Subnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
+        Subnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
         VPC: !GetAtt NetworkStack.Outputs.VPC
+        VPCCidrBlock: !GetAtt NetworkStack.Outputs.VPCCidrBlock
 
   GraphStack:
     Type: AWS::Serverless::Application

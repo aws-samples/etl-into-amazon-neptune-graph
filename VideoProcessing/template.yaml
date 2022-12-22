@@ -73,8 +73,10 @@ Resources:
     Properties:
       GroupDescription: Security group for the processing handler function
       GroupName: ProcessingSecurityGroup
-      #      SecurityGroupEgress:
-      #        - Egress
+      SecurityGroupEgress:
+        - Description: Allow all outbound traffic
+          IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
       #      SecurityGroupIngress:
       #        - Ingress
       VpcId: !Ref VPC
@@ -159,6 +161,7 @@ Resources:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
           GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
           GRAPH_LOAD_QUEUE: !Ref GraphLoadQueue
+          AWS_ACCOUNT_ID: !Ref AWS::AccountId
       VpcConfig:
         SecurityGroupIds:
           - !Ref ProcessingSecurityGroup

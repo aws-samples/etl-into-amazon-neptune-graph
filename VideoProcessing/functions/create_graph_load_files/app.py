@@ -14,17 +14,23 @@ from datetime import datetime
 graph_load_staging_bucket = os.environ["GRAPH_LOAD_STAGING_BUCKET"]
 graph_load_processing_bucket = os.environ["GRAPH_LOAD_PROCESSING_BUCKET"]
 graph_load_queue = os.environ["GRAPH_LOAD_QUEUE"]
+aws_region = os.environ["AWS_REGION"]
+aws_account_id = os.environ["AWS_ACCOUNT_ID"]
 
-s3 = boto3.client("s3")
-sqs = boto3.client("sqs")
+s3 = boto3.client("s3", region_name=aws_region)
+
+sqs_endpoint_url = f"https://sqs.{aws_region}.amazonaws.com/"
+sqs = boto3.client("sqs", endpoint_url=sqs_endpoint_url)
 
 # get the queue url
-print(f"Fetching URL for {graph_load_queue}")
-response = sqs.get_queue_url(
-    QueueName=graph_load_queue,
-)
-queue_url = response["QueueUrl"]
+# print(f"Fetching URL for {graph_load_queue}")
+# response = sqs.get_queue_url(
+#     QueueName=graph_load_queue,
+# )
+# queue_url = response["QueueUrl"]
+# print(f"Queue URL: {queue_url}")
 
+queue_url = f"https://sqs.{aws_region}.amazonaws.com/{aws_account_id}/{graph_load_queue}"
 
 class GraphLoadFiles:
     def __init__(self, source_name):
@@ -190,9 +196,10 @@ def lambda_handler(event, context):
 
     # add task to the graph loader queue for final load from these files to Neptune
 
+    print("Queueing graph load")
     sqs.send_message(
         QueueUrl=queue_url,
         MessageBody=json.dumps(event)
     )
-
+    print("Graph load queued")
     return event
