@@ -76,9 +76,9 @@ Resources:
         - Description: Allow traffic from the VPC
           IpProtocol: "-1"
           CidrIp: !Ref VPCCidrBlock
-        - Description: Allow all traffic
-          IpProtocol: "-1"
-          CidrIp: 0.0.0.0/0
+#        - Description: Allow all traffic
+#          IpProtocol: "-1"
+#          CidrIp: 0.0.0.0/0
       VpcId: !Ref VPC
 
   SQSInterfaceEndpoint:
