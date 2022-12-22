@@ -74,6 +74,7 @@ Resources:
       Runtime: python3.9
       Timeout: 15
       ReservedConcurrentExecutions: 1
+      KmsKeyArn: !Ref MasterKey
       DeadLetterQueue:
         TargetArn: !GetAtt GraphLoadTriggerDeadLetterLoadQueue.Arn
         Type: SQS
