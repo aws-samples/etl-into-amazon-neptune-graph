@@ -61,25 +61,19 @@ Resources:
           ]
         }
       Description: Allows VPC FlowLogs to be written to CloudWatch
-
-  AllowFlowLogsPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        "Version": "2012-10-17"
-        "Statement":
-            - "Effect": "Allow"
-              "Action":
-                - "logs:CreateLogGroup"
-                - "logs:CreateLogStream"
-                - "logs:PutLogEvents"
-                - "logs:DescribeLogGroups"
-                - "logs:DescribeLogStreams"
-              "Resource": !Ref VpcFlowLog
-      PolicyName: "AllowFlowLogsPolicy-${AWS::StackName}-{AWS::Region}"
-      Roles:
-        - !Ref VpcFlowLogRole
-
+      Policies:
+        - PolicyName: "AllowFlowLogsPolicy"
+          PolicyDocument:
+            "Version": "2012-10-17"
+            "Statement":
+              - "Effect": "Allow"
+                "Action":
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:DescribeLogGroups"
+                  - "logs:DescribeLogStreams"
+                "Resource": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:ETL-${AWS::Region}-${AWS::StackName}"
 
   VpcFlowLog:
     Type: AWS::EC2::FlowLog
@@ -151,7 +145,7 @@ Resources:
   NoIngressSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: "no-ingress-sg"
+#      GroupName: "no-ingress-sg"
       GroupDescription: "Security group with no ingress rule"
       VpcId: !Ref VPC
 
