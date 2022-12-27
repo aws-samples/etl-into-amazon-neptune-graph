@@ -97,6 +97,7 @@ Resources:
             Effect: Allow
             Action:
               - "kms:GenerateDataKey"
+              - "kms:Decrypt"
               - "kms:DescribeKey"
             Resource: !Ref MasterKey
       VpcConfig:
