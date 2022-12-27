@@ -57,6 +57,10 @@ def lambda_handler(event, context):
     completed_with_errors = [ job_id for job_id in event["LoadJobStatus"] if event["LoadJobStatus"][job_id] in ["LOAD_COMMITTED_W_WRITE_CONFLICTS"] ]
     running = [ job_id for job_id in event["LoadJobStatus"] if event["LoadJobStatus"][job_id] in ["LOAD_NOT_STARTED", "LOAD_IN_QUEUE"] ]
 
+    print(f"Node Load Job Count: {len(node_load_job_ids)}")
+    print(f"Edge Load Job Count: {len(edge_load_job_ids)}")
+    print(f"Complete job count: {len(completed)}")
+
     load_failed = False
     if len(running) > 0:
         overall_status = "LOAD_IN_PROGRESS"
@@ -74,7 +78,7 @@ def lambda_handler(event, context):
     elif len(not_started) == len(edge_load_job_ids) + len(node_load_job_ids):
         overall_status = "LOAD_NOT_STARTED"
     else:
-        raise "Invalid Job Status"
+        raise ValueError("Invalid Job Status")
 
     event["LoadJobsCompleted"] = completed
     event["LoadJobsFailed"] = failed

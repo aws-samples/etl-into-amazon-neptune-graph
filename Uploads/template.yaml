@@ -27,6 +27,9 @@ Parameters:
   MasterKey:
     Type: String
 
+#  VPCCidrBlock:
+#    Type: String
+
 Resources:
   IngestBucket:
     Type: AWS::S3::Bucket
@@ -45,6 +48,26 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref LoggingBucketName
         LogFilePrefix: GraphETL/Video/Ingest
+
+  IngestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref IngestBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+            - Action:
+              - 's3:GetObject'
+              Effect: Deny
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref IngestBucket
+                  - /*
+              Principal: '*'
+              Condition:
+                StringNotEquals:
+                  'aws:PrincipalAccount': !Ref AWS::AccountId
 
   UploadsDeadLetterQueue:
     Type: AWS::SQS::Queue

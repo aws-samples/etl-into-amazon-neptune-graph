@@ -124,6 +124,26 @@ Resources:
         DestinationBucketName: !Ref LoggingBucketName
         LogFilePrefix: GraphETL/Video/GraphLoad
 
+  GraphLoadStagingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref GraphLoadStagingBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: Deny
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref GraphLoadStagingBucket
+                - /*
+            Principal: '*'
+            Condition:
+              StringNotEquals:
+                'aws:PrincipalAccount': !Ref AWS::AccountId
+
   GraphLoadQueue:
     Type: AWS::SQS::Queue
     Properties:
