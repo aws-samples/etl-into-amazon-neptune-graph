@@ -63,7 +63,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for the graph load function
-      GroupName: GraphLoadSecurityGroup
+#      GroupName: GraphLoadSecurityGroup
       VpcId: !Ref VPC
 
   GraphLoadStateMachineTrigger:
@@ -95,7 +95,9 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - Statement:
             Effect: Allow
-            Action: "kms:*"
+            Action:
+              - "kms:GenerateDataKey"
+              - "kms:DescribeKey"
             Resource: !Ref MasterKey
       VpcConfig:
         SecurityGroupIds:

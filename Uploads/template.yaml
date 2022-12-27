@@ -78,7 +78,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for the uploads handler function
-      GroupName: UploadsHandlerSecurityGroup
+#      GroupName: UploadsHandlerSecurityGroup
       VpcId: !Ref VPC
 
   NewUploadHandler:
