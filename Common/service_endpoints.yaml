@@ -68,10 +68,10 @@ Resources:
     Properties:
       GroupDescription: Security group for the processing handler function
 #      GroupName: ProcessingSecurityGroup
-#      SecurityGroupEgress:
-#        - Description: Allow all outbound traffic
-#          IpProtocol: "-1"
-#          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - Description: Allow all outbound traffic
+          IpProtocol: "-1"
+          CidrIp: !Ref VPCCidrBlock
       SecurityGroupIngress:
         - Description: Allow traffic from the VPC
           IpProtocol: "-1"

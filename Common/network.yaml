@@ -148,6 +148,11 @@ Resources:
 #      GroupName: "no-ingress-sg"
       GroupDescription: "Security group with no ingress rule"
       VpcId: !Ref VPC
+      SecurityGroupEgress:
+        Description: Allow all outbound traffic
+        IpProtocol: "-1"
+        CidrIp: 0.0.0.0/0
+
 
 Outputs:
   VPC:
