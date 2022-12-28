@@ -120,10 +120,8 @@ Resources:
         - !Ref Subnet1
         - !Ref Subnet2
 
-
-
-#Outputs:
-#  VPC:
-#    Description: A reference to the created VPC
-#    Value: !Ref VPC
+Outputs:
+  InterfaceEndpointSecurityGroup:
+    Description: A reference to the security group
+    Value: !Ref InterfaceEndpointSecurityGroup
 
