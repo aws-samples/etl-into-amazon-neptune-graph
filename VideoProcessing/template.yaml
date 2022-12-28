@@ -98,8 +98,10 @@ Resources:
       GroupName: ProcessingSecurityGroup
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
-          IpProtocol: "-1"
+          IpProtocol: "tcp"
           CidrIp: 0.0.0.0/0
+          FromPort: "443"
+          ToPort: "443"
       VpcId: !Ref VPC
 
   StartRekognitionJobFunction:

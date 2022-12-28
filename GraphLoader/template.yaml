@@ -36,6 +36,9 @@ Parameters:
   MasterKey:
     Type: String
 
+  VPCCidrBlock:
+    Type: String
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -59,12 +62,18 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckGraphLoadStatusFunction
 
-  GraphLoadSecurityGroup:
+  GraphLoadTriggerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for the graph load function
 #      GroupName: GraphLoadSecurityGroup
       VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: "tcp"
+          Description: Allow outbound traffic to VPC
+          FromPort: "443"
+          ToPort: "443"
+          CidrIp: !Ref VPCCidrBlock
 
   GraphLoadStateMachineTrigger:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -102,7 +111,7 @@ Resources:
             Resource: !Ref MasterKey
       VpcConfig:
         SecurityGroupIds:
-          - !Ref GraphLoadSecurityGroup
+          - !Ref GraphLoadTriggerSecurityGroup
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2

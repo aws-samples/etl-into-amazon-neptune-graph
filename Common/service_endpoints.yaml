@@ -70,12 +70,16 @@ Resources:
 #      GroupName: ProcessingSecurityGroup
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
-          IpProtocol: "-1"
+          IpProtocol: "tcp"
           CidrIp: !Ref VPCCidrBlock
+          FromPort: "443"
+          ToPort: "443"
       SecurityGroupIngress:
         - Description: Allow traffic from the VPC
-          IpProtocol: "-1"
+          IpProtocol: "tcp"
           CidrIp: !Ref VPCCidrBlock
+          FromPort: "443"
+          ToPort: "443"
 #        - Description: Allow all traffic
 #          IpProtocol: "-1"
 #          CidrIp: 0.0.0.0/0
