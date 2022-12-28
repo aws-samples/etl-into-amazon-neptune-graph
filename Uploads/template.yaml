@@ -27,8 +27,8 @@ Parameters:
   MasterKey:
     Type: String
 
-#  VPCCidrBlock:
-#    Type: String
+  VPCCidrBlock:
+    Type: String
 
 Resources:
   IngestBucket:
@@ -80,6 +80,12 @@ Resources:
       GroupDescription: Security group for the uploads handler function
 #      GroupName: UploadsHandlerSecurityGroup
       VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - Description: Allow all outbound traffic
+          IpProtocol: "tcp"
+          CidrIp: !Ref VPCCidrBlock
+          FromPort: "443"
+          ToPort: "443"
 
   NewUploadHandler:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction

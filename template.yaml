@@ -81,7 +81,7 @@ Resources:
         PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
         PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer
         MasterKey: !GetAtt Security.Outputs.MasterKey
-#        VPCCidrBlock: !GetAtt NetworkStack.Outputs.VPCCidrBlock
+        VPCCidrBlock: !GetAtt NetworkStack.Outputs.VPCCidrBlock
 
   UploadsStack:
     Type: AWS::Serverless::Application
@@ -95,4 +95,4 @@ Resources:
         PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
         PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer
         MasterKey: !GetAtt Security.Outputs.MasterKey
-#        VPCCidrBlock: !GetAtt NetworkStack.Outputs.VPCCidrBlock
+        VPCCidrBlock: !GetAtt NetworkStack.Outputs.VPCCidrBlock

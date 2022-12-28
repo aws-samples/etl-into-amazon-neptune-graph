@@ -30,6 +30,9 @@ Parameters:
   MasterKey:
     Type: String
 
+  VPCCidrBlock:
+    Type: String
+
 Resources:
 
   GraphLoadProcessingBucket:
@@ -95,11 +98,11 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for the processing handler function
-      GroupName: ProcessingSecurityGroup
+#      GroupName: ProcessingSecurityGroup
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
           IpProtocol: "tcp"
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref VPCCidrBlock
           FromPort: "443"
           ToPort: "443"
       VpcId: !Ref VPC
