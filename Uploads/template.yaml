@@ -94,7 +94,6 @@ Resources:
       Handler: app.lambda_handler
       Runtime: python3.9
       Timeout: 15
-
       ReservedConcurrentExecutions: 1
       KmsKeyArn: !Ref MasterKey
       DeadLetterQueue:
@@ -107,7 +106,12 @@ Resources:
           Type: S3
           Properties:
             Bucket: !Ref IngestBucket
-            Events: s3:ObjectCreated:*
+            Events: s3:ObjectCreated
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: mp4
       Environment:
         Variables:
           VIDEO_PROCESSING_STEP_FUNCTION_ARN: !Ref VideoProcessingStateMachineArn

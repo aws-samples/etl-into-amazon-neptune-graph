@@ -81,7 +81,8 @@ def lambda_handler(event, context):
         edges_load_id = result["payload"]["loadId"]
         edge_load_job_ids.append(edges_load_id) #
 
-    event["EdgeLoadJobIds"] = edge_load_job_ids
+
+
     event["NodeLoadJobIds"] = node_load_job_ids
 
     return event

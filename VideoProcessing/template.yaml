@@ -98,13 +98,13 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for the processing handler function
-#      GroupName: ProcessingSecurityGroup
+      GroupName: ProcessingSecurityGroup
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
-          IpProtocol: "tcp"
+          IpProtocol: "-1"
           CidrIp: !Ref VPCCidrBlock
-          FromPort: "443"
-          ToPort: "443"
+#          FromPort: "443"
+#          ToPort: "443"
       VpcId: !Ref VPC
 
   StartRekognitionJobFunction:

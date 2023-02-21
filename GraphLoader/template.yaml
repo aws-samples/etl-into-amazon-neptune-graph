@@ -188,7 +188,7 @@ Resources:
         SubnetIds:
           - !Ref NeptuneSubnet
       Policies:
-        - AmazonS3FullAccess
+        - AmazonS3ReadOnlyAccess
       Layers:
         - !Ref PowertoolsLayer
 
