@@ -7,22 +7,6 @@ neptune_loader_role = os.environ["NEPTUNE_LOAD_ROLE_ARN"]
 aws_region = os.environ["AWS_REGION"]
 
 def lambda_handler(event, context):
-    """loads data to neptune from s3
-
-
-    Parameters
-    ----------
-    event: dict, required
-        Input event to the Lambda function
-
-    context: object, required
-        Lambda Context runtime methods and attributes
-
-    Returns
-    ------
-        dict: Object containing details of the video processing job
-    """
-
     print(event)
 
     edge_load_job_ids = event["EdgeLoadJobIds"]

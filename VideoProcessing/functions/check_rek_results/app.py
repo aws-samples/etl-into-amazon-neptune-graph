@@ -7,22 +7,6 @@ graph_load_processing_bucket = os.environ["GRAPH_LOAD_PROCESSING_BUCKET"]
 rek = boto3.client("rekognition")
 s3 = boto3.client("s3")
 def lambda_handler(event, context):
-    """Receives label detection data for rekognition job_id from the event
-
-
-    Parameters
-    ----------
-    event: dict, required
-        Input event to the Lambda function
-
-    context: object, required
-        Lambda Context runtime methods and attributes
-
-    Returns
-    ------
-        dict: Object containing details of the video processing job
-    """
-
     print(event)
 
     job_id = event["job_id"]

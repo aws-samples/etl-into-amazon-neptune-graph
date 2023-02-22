@@ -9,22 +9,6 @@ aws_region = os.environ["AWS_REGION"]
 graph_load_staging_bucket = os.environ["GRAPH_LOAD_STAGING_BUCKET"]
 
 def lambda_handler(event, context):
-    """loads data to neptune from s3
-
-
-    Parameters
-    ----------
-    event: dict, required
-        Input event to the Lambda function
-
-    context: object, required
-        Lambda Context runtime methods and attributes
-
-    Returns
-    ------
-        dict: Object containing details of the video processing job
-    """
-
     print(event)
 
     edge_load_job_ids = []

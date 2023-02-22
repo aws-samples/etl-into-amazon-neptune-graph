@@ -22,14 +22,6 @@ s3 = boto3.client("s3", region_name=aws_region)
 sqs_endpoint_url = f"https://sqs.{aws_region}.amazonaws.com/"
 sqs = boto3.client("sqs", endpoint_url=sqs_endpoint_url)
 
-# get the queue url
-# print(f"Fetching URL for {graph_load_queue}")
-# response = sqs.get_queue_url(
-#     QueueName=graph_load_queue,
-# )
-# queue_url = response["QueueUrl"]
-# print(f"Queue URL: {queue_url}")
-
 queue_url = f"https://sqs.{aws_region}.amazonaws.com/{aws_account_id}/{graph_load_queue}"
 
 class GraphLoadFiles:
@@ -81,7 +73,7 @@ class GraphLoadFiles:
 
     def get_node_id(self, node):
         node_name = node["Name"]
-        m = hashlib.new('md5',
+        m = hashlib.new('sha256',
             usedforsecurity=False)
         m.update(node_name.encode())
         node_id = m.hexdigest()
@@ -89,7 +81,7 @@ class GraphLoadFiles:
 
     def get_edge_id(self, node1, node2, edge_type, salt=""):
         estring = f"{node1['Name']}-{edge_type}-{node2['Name']}-{salt}"
-        m = hashlib.new('md5', 
+        m = hashlib.new('sha256',
             usedforsecurity=False)
         m.update(estring.encode())
         edge_id = m.hexdigest()
@@ -135,22 +127,6 @@ class GraphLoadFiles:
 
 
 def lambda_handler(event, context):
-    """processes detected labels and writes node and edge files for entities and relationships
-
-
-    Parameters
-    ----------
-    event: dict, required
-        Input event to the Lambda function
-
-    context: object, required
-        Lambda Context runtime methods and attributes
-
-    Returns
-    ------
-        dict: Object containing details of the video processing job
-    """
-
     print(event)
 
     # Put the video name in a 'nodes'ish object

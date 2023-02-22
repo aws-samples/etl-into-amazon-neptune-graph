@@ -36,6 +36,17 @@ Parameters:
   EndpointsSecurityGroup:
     Type: String
 
+Mappings:
+  PrefixListMap:
+    us-east-1:
+      "S3PrefixListId": "pl-63a5400a"
+    us-west-1:
+      "S3PrefixListId": "pl-6ba54002"
+    us-west-2:
+      "S3PrefixListId": "pl-68a54001"
+    us-east-2:
+      "S3PrefixListId": "pl-7ba54012"
+
 Resources:
 
   GraphLoadProcessingBucket:
@@ -105,13 +116,10 @@ Resources:
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
           IpProtocol: "-1"
-          CidrIp: 0.0.0.0/0 # todo: narrow this scope
-#          CidrIp: !Ref VPCCidrBlock
-#        - Description: Allow traffic to service endpoints
-#          IpProtocol: "-1"
-#          DestinationPrefixListId: !Sub "com.amazonaws.${AWS::Region}.s3"
-#          FromPort: "443"
-#          ToPort: "443"
+          CidrIp: !Ref VPCCidrBlock
+        - Description: Allow traffic to service endpoints
+          IpProtocol: "-1"
+          DestinationPrefixListId: !FindInMap [PrefixListMap, !Ref "AWS::Region", S3PrefixListId]
       VpcId: !Ref VPC
 
   StartRekognitionJobFunction:
@@ -189,7 +197,10 @@ Resources:
       Architectures:
         - x86_64
       Policies:
-        - AmazonS3FullAccess
+        - S3ReadPolicy:
+            BucketName: !Ref GraphLoadProcessingBucket
+        - S3WritePolicy:
+            BucketName: !Ref GraphLoadStagingBucket
         - SQSSendMessagePolicy:
             QueueName: !Ref GraphLoadQueue
         - AmazonSQSFullAccess
