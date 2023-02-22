@@ -33,6 +33,9 @@ Parameters:
   VPCCidrBlock:
     Type: String
 
+  EndpointsSecurityGroup:
+    Type: String
+
 Resources:
 
   GraphLoadProcessingBucket:
@@ -102,7 +105,11 @@ Resources:
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
           IpProtocol: "-1"
-          CidrIp: !Ref VPCCidrBlock
+          CidrIp: 0.0.0.0/0 # todo: narrow this scope
+#          CidrIp: !Ref VPCCidrBlock
+#        - Description: Allow traffic to service endpoints
+#          IpProtocol: "-1"
+#          DestinationPrefixListId: !Sub "com.amazonaws.${AWS::Region}.s3"
 #          FromPort: "443"
 #          ToPort: "443"
       VpcId: !Ref VPC
@@ -148,12 +155,13 @@ Resources:
         Type: SQS
       ReservedConcurrentExecutions: 1
       KmsKeyArn: !Ref MasterKey
-      Timeout: 60
+      Timeout: 15
       Architectures:
         - x86_64
       Policies:
         - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
+        - AmazonSQSFullAccess
       Environment:
         Variables:
           GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket

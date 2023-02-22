@@ -106,7 +106,7 @@ Resources:
           Type: S3
           Properties:
             Bucket: !Ref IngestBucket
-            Events: s3:ObjectCreated
+            Events: s3:ObjectCreated:*
             Filter:
               S3Key:
                 Rules:

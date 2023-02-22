@@ -82,6 +82,7 @@ Resources:
         PowertoolsLayer: !GetAtt LambdaLayers.Outputs.PowertoolsLayer
         MasterKey: !GetAtt Security.Outputs.MasterKey
         VPCCidrBlock: !GetAtt NetworkStack.Outputs.VPCCidrBlock
+        EndpointsSecurityGroup: !GetAtt ServiceEndpoints.Outputs.InterfaceEndpointSecurityGroup
 
   UploadsStack:
     Type: AWS::Serverless::Application
