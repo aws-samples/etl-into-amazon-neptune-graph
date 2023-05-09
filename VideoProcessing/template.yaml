@@ -5,11 +5,14 @@ Description: >
 
   Sample SAM Template for VideoProcessing
 
-Parameters:
+Parameters:   
   GraphLoadStagingBucket:
     Type: String
 
-  GraphLoadQueue:
+  GraphLoadQueueName:
+    Type: String
+
+  GraphLoadQueueArn:
     Type: String
 
   LoggingBucketName:
@@ -35,6 +38,22 @@ Parameters:
 
   EndpointsSecurityGroup:
     Type: String
+
+Globals:
+  Function:
+    Timeout: 3
+    Tracing: Active
+    Runtime: python3.9
+    Architectures:
+      - x86_64
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref ProcessingSecurityGroup
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+    RuntimeManagementConfig:
+      UpdateRuntimeOn: Auto
 
 Mappings:
   PrefixListMap:
@@ -103,6 +122,11 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref CreateGraphLoadFilesFunction
 
+  VideoProcessingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref MasterKey
+
   VideoProcessingDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -112,14 +136,17 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for the processing handler function
-      GroupName: ProcessingSecurityGroup
       SecurityGroupEgress:
-        - Description: Allow all outbound traffic
-          IpProtocol: "-1"
-          CidrIp: !Ref VPCCidrBlock
-        - Description: Allow traffic to service endpoints
-          IpProtocol: "-1"
-          DestinationPrefixListId: !FindInMap [PrefixListMap, !Ref "AWS::Region", S3PrefixListId]
+      - IpProtocol: tcp
+        FromPort: "443"
+        ToPort: "443"
+        CidrIp: !Ref VPCCidrBlock
+        Description: Allow outbound HTTPS traffic
+      - IpProtocol: tcp
+        FromPort: "443"
+        ToPort: "443"
+        Description: Allow outbound HTTPS traffic
+        DestinationPrefixListId: !FindInMap [PrefixListMap, !Ref "AWS::Region", S3PrefixListId]
       VpcId: !Ref VPC
 
   StartRekognitionJobFunction:
@@ -127,121 +154,159 @@ Resources:
     Properties:
       CodeUri: functions/start_label_detection/
       Handler: app.lambda_handler
-      Runtime: python3.9
       DeadLetterQueue:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
         Type: SQS
       ReservedConcurrentExecutions: 1
       KmsKeyArn: !Ref MasterKey
       Timeout: 15
-      Architectures:
-        - x86_64
       Environment:
         Variables:
           SNS_ROLE: !GetAtt RekognitionRole.Arn
       Policies:
-        - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
-        - AmazonSQSFullAccess
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref ProcessingSecurityGroup
-        SubnetIds:
-          - !Ref PrivateSubnet1
-          - !Ref PrivateSubnet2
+        - S3ReadPolicy:
+            BucketName: !Ref GraphLoadProcessingBucket
+        - S3WritePolicy:
+            BucketName: !Ref GraphLoadProcessingBucket
+        - Statement:
+          - Sid: KmsInlinePolicy
+            Effect: Allow
+            Action:      
+              - "kms:GenerateDataKey"
+              - "kms:Decrypt"
+              - "kms:DescribeKey"
+            Resource: !Ref MasterKey            
+          - Sid: SqsInlinePolicy
+            Effect: Allow
+            Action:
+              - "sqs:DeleteMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:SendMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:SetQueueAttributes"
+            Resource: !GetAtt VideoProcessingQueue.Arn
+          - Sid: S3InlinePolicy
+            Effect: Allow
+            Action:
+              - "s3:Get*"
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::*'
       Layers:
         - !Ref PowertoolsLayer
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: False positive. This is being deployed in a VPC by specifying the VpcConfig parameters.
   CheckRekognitionResultsFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/check_rek_results/
       Handler: app.lambda_handler
-      Runtime: python3.9
       DeadLetterQueue:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
         Type: SQS
       ReservedConcurrentExecutions: 1
       KmsKeyArn: !Ref MasterKey
       Timeout: 15
-      Architectures:
-        - x86_64
       Policies:
-        - AmazonS3FullAccess
         - AmazonRekognitionFullAccess
-        - AmazonSQSFullAccess
+        - S3WritePolicy:
+            BucketName: !Ref GraphLoadProcessingBucket
+        - Statement:        
+          - Sid: KmsInlinePolicy
+            Effect: Allow
+            Action:      
+              - "kms:GenerateDataKey"
+              - "kms:Decrypt"
+              - "kms:DescribeKey"
+            Resource: !Ref MasterKey           
+          - Sid: SqsInlinePolicy
+            Effect: Allow
+            Action:
+              - "sqs:DeleteMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:SendMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:SetQueueAttributes"
+            Resource: !GetAtt VideoProcessingQueue.Arn        
       Environment:
         Variables:
           GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref ProcessingSecurityGroup
-        SubnetIds:
-          - !Ref PrivateSubnet1
-          - !Ref PrivateSubnet2
       Layers:
         - !Ref PowertoolsLayer
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: False positive. This is being deployed in a VPC by specifying the VpcConfig parameters.
   CreateGraphLoadFilesFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/create_graph_load_files/
       Handler: app.lambda_handler
-      Runtime: python3.9
       ReservedConcurrentExecutions: 1
       KmsKeyArn: !Ref MasterKey
       DeadLetterQueue:
         TargetArn: !GetAtt VideoProcessingDeadLetterQueue.Arn
         Type: SQS
       Timeout: 600
-      Architectures:
-        - x86_64
       Policies:
         - S3ReadPolicy:
             BucketName: !Ref GraphLoadProcessingBucket
         - S3WritePolicy:
             BucketName: !Ref GraphLoadStagingBucket
-        - SQSSendMessagePolicy:
-            QueueName: !Ref GraphLoadQueue
-        - AmazonSQSFullAccess
         - Statement:
+          - Sid: KmsInlinePolicy
             Effect: Allow
-            Action: "kms:*"
-            Resource: !Ref MasterKey
+            Action:      
+              - "kms:GenerateDataKey"
+              - "kms:Decrypt"
+              - "kms:DescribeKey"
+            Resource: !Ref MasterKey            
+          - Sid: SqsInlinePolicy
+            Effect: Allow
+            Action:
+              - "sqs:DeleteMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:SendMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:SetQueueAttributes"
+            Resource: !Ref GraphLoadQueueArn
       Environment:
         Variables:
           GRAPH_LOAD_STAGING_BUCKET: !Ref GraphLoadStagingBucket
           GRAPH_LOAD_PROCESSING_BUCKET: !Ref GraphLoadProcessingBucket
-          GRAPH_LOAD_QUEUE: !Ref GraphLoadQueue
+          GRAPH_LOAD_QUEUE: !Ref GraphLoadQueueName
           AWS_ACCOUNT_ID: !Ref AWS::AccountId
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref ProcessingSecurityGroup
-        SubnetIds:
-          - !Ref PrivateSubnet1
-          - !Ref PrivateSubnet2
       Layers:
         - !Ref PowertoolsLayer
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: False positive. This is being deployed in a VPC by specifying the VpcConfig parameters.
   RekognitionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "video_processing_topic_role_${AWS::Region}"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
       AssumeRolePolicyDocument: 
         {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": {
-                        "Service": "rekognition.amazonaws.com"
-                    },
-                    "Action": "sts:AssumeRole",
-                    "Condition": {}
-                }
-            ]
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "rekognition.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {}
+            }
+          ]
         }
 
 Outputs:

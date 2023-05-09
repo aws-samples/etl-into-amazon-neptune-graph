@@ -49,6 +49,8 @@ Resources:
   GraphStack:
     Type: AWS::Serverless::Application
     Properties:
+      Parameters:
+          DBClusterId: !Sub "GraphETLDBCluster-${AWS::Region}"
       Location: https://aws-neptune-customer-samples.s3.amazonaws.com/v2/cloudformation-templates/neptune-ml-nested-stack.json
 
   GraphLoaderStack:
@@ -74,7 +76,8 @@ Resources:
       Location: VideoProcessing/template.yaml
       Parameters:
         GraphLoadStagingBucket: !GetAtt GraphLoaderStack.Outputs.GraphLoadStagingBucket
-        GraphLoadQueue: !GetAtt GraphLoaderStack.Outputs.GraphLoadQueue
+        GraphLoadQueueName: !GetAtt GraphLoaderStack.Outputs.GraphLoadQueueName
+        GraphLoadQueueArn: !GetAtt GraphLoaderStack.Outputs.GraphLoadQueueArn        
         LoggingBucketName: !GetAtt LoggingStack.Outputs.BucketName
         VPC: !GetAtt NetworkStack.Outputs.VPC
         PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1

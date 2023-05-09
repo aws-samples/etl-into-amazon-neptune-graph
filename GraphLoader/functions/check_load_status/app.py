@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     for load_job_id in load_jobs:
 
         print(f"Checking load status for job with id: {load_job_id}")
-        response = requests.get(f"{neptune_loader_endpoint}/{load_job_id}")
+        response = requests.get(f"{neptune_loader_endpoint}/{load_job_id}", timeout=10)
         print(response.text)
 
         result = json.loads(response.content)

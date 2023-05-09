@@ -56,18 +56,18 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-            - Action:
-              - 's3:GetObject'
-              Effect: Deny
-              Resource: !Join
-                - ''
-                - - 'arn:aws:s3:::'
-                  - !Ref IngestBucket
-                  - /*
-              Principal: '*'
-              Condition:
-                StringNotEquals:
-                  'aws:PrincipalAccount': !Ref AWS::AccountId
+          - Action:
+            - 's3:GetObject'
+            Effect: Deny
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref IngestBucket
+                - /*
+            Principal: '*'
+            Condition:
+              StringNotEquals:
+                'aws:PrincipalAccount': !Ref AWS::AccountId
 
   UploadsDeadLetterQueue:
     Type: AWS::SQS::Queue
@@ -92,6 +92,8 @@ Resources:
       CodeUri: upload_handler/
       Handler: app.lambda_handler
       Runtime: python3.9
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: Auto
       Timeout: 15
       ReservedConcurrentExecutions: 1
       KmsKeyArn: !Ref MasterKey
@@ -115,7 +117,28 @@ Resources:
         Variables:
           VIDEO_PROCESSING_STEP_FUNCTION_ARN: !Ref VideoProcessingStateMachineArn
       Policies:
-        - AWSStepFunctionsFullAccess
+      - Statement:
+        - Sid: StateMachineInlinePolicy
+          Effect: Allow
+          Action:
+            - "states:CreateActivity"
+            - "states:CreateStateMachine"
+            - "states:DeleteActivity"
+            - "states:DeleteStateMachine"
+            - "states:DescribeActivity"
+            - "states:DescribeExecution"
+            - "states:DescribeStateMachine"
+            - "states:GetActivityTask"
+            - "states:GetExecutionHistory"
+            - "states:ListActivities"
+            - "states:ListExecutions"
+            - "states:ListStateMachines"
+            - "states:SendTaskFailure"
+            - "states:SendTaskHeartbeat"
+            - "states:SendTaskSuccess"
+            - "states:StartExecution"
+            - "states:StopExecution"
+          Resource: !Ref VideoProcessingStateMachineArn
       VpcConfig:
         SecurityGroupIds:
           - !Ref UploadsHandlerSecurityGroup
@@ -124,3 +147,8 @@ Resources:
           - !Ref PrivateSubnet2
       Layers:
         - !Ref PowertoolsLayer
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: False positive. This is being deployed in a VPC by specifying the VpcConfig parameters for Function under globals.

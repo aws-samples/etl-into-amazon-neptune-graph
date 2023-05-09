@@ -30,7 +30,7 @@ def lambda_handler(event, context):
             "queueRequest": "TRUE",
         }
 
-        response = requests.post(neptune_loader_endpoint, nodes_payload)
+        response = requests.post(neptune_loader_endpoint, nodes_payload, timeout=10)
         print(response.text)
 
         result = json.loads(response.content)
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
             "dependencies": f"[\"{nodes_load_id}\"]"
         }
 
-        response = requests.post(neptune_loader_endpoint, edges_payload)
+        response = requests.post(neptune_loader_endpoint, edges_payload, timeout=10)
         print(response.text)
 
         result = json.loads(response.content)
@@ -66,7 +66,7 @@ def lambda_handler(event, context):
         edge_load_job_ids.append(edges_load_id) #
 
 
-
+    event["EdgeLoadJobIds"] = edge_load_job_ids
     event["NodeLoadJobIds"] = node_load_job_ids
 
     return event
