@@ -1,3 +1,7 @@
 **/.aws-sam/*
 **/.idea/*
 samconfig.toml
+
+# working out of SageMaker :)
+.ipynb_checkpoints
+**.ipynb_checkpoints

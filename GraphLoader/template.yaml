@@ -44,11 +44,15 @@ Globals:
   Function:
     Timeout: 3
     Tracing: Active
+    Runtime: python3.9
+    Architectures:
+      - x86_64
+    RuntimeManagementConfig:
+      UpdateRuntimeOn: Auto
   Api:
     TracingEnabled: True
 
 Resources:
-
   GraphLoadStateMachine:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
@@ -87,8 +91,6 @@ Resources:
       DeadLetterQueue:
         TargetArn: !GetAtt GraphLoadTriggerDeadLetterLoadQueue.Arn
         Type: SQS
-      Architectures:
-        - x86_64
       Events:
         GraphLoadEvent:
           Type: SQS
@@ -99,16 +101,45 @@ Resources:
         Variables:
           GRAPH_LOAD_STATE_MACHINE_ARN: !Ref GraphLoadStateMachine
       Policies:
-        - AWSStepFunctionsFullAccess
-        - AmazonSQSFullAccess
-        - AWSLambdaBasicExecutionRole
-        - Statement:
-            Effect: Allow
-            Action:
-              - "kms:GenerateDataKey"
-              - "kms:Decrypt"
-              - "kms:DescribeKey"
-            Resource: !Ref MasterKey
+      - Statement:
+        - Sid: KmsInlinePolicy
+          Effect: Allow
+          Action:      
+            - "kms:GenerateDataKey"
+            - "kms:Decrypt"
+            - "kms:DescribeKey"
+          Resource: !Ref MasterKey            
+        - Sid: SqsInlinePolicy
+          Effect: Allow
+          Action:
+            - "sqs:DeleteMessage"
+            - "sqs:ReceiveMessage"
+            - "sqs:SendMessage"
+            - "sqs:GetQueueAttributes"
+            - "sqs:ChangeMessageVisibility"
+            - "sqs:SetQueueAttributes"
+          Resource: !GetAtt GraphLoadQueue.Arn
+        - Sid: StateMachineInlinePolicy
+          Effect: Allow
+          Action:
+            - "states:CreateActivity"
+            - "states:CreateStateMachine"
+            - "states:DeleteActivity"
+            - "states:DeleteStateMachine"
+            - "states:DescribeActivity"
+            - "states:DescribeExecution"
+            - "states:DescribeStateMachine"
+            - "states:GetActivityTask"
+            - "states:GetExecutionHistory"
+            - "states:ListActivities"
+            - "states:ListExecutions"
+            - "states:ListStateMachines"
+            - "states:SendTaskFailure"
+            - "states:SendTaskHeartbeat"
+            - "states:SendTaskSuccess"
+            - "states:StartExecution"
+            - "states:StopExecution"
+          Resource: !Ref GraphLoadStateMachine
       VpcConfig:
         SecurityGroupIds:
           - !Ref GraphLoadTriggerSecurityGroup
@@ -117,7 +148,12 @@ Resources:
           - !Ref PrivateSubnet2
       Layers:
         - !Ref PowertoolsLayer
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: False positive. This is being deployed in a VPC by specifying the VpcConfig parameters.
+            
   GraphLoadStagingBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -171,12 +207,9 @@ Resources:
     Properties:
       CodeUri: functions/load_to_graph/
       Handler: app.lambda_handler
-      Runtime: python3.9
       Timeout: 60
       ReservedConcurrentExecutions: 1
       KmsKeyArn: !Ref MasterKey
-      Architectures:
-        - x86_64
       Environment:
         Variables:
           NEPTUNE_LOADER_ENDPOINT: !Ref NeptuneLoaderEndpoint
@@ -191,18 +224,19 @@ Resources:
         - AmazonS3ReadOnlyAccess
       Layers:
         - !Ref PowertoolsLayer
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: False positive. This is being deployed in a VPC by specifying the VpcConfig parameters.
   CheckGraphLoadStatusFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/check_load_status/
       Handler: app.lambda_handler
-      Runtime: python3.9
       Timeout: 60
       ReservedConcurrentExecutions: 1
       KmsKeyArn: !Ref MasterKey
-      Architectures:
-        - x86_64
       Environment:
         Variables:
           NEPTUNE_LOADER_ENDPOINT: !Ref NeptuneLoaderEndpoint
@@ -214,12 +248,19 @@ Resources:
           - !Ref NeptuneSubnet
       Layers:
         - !Ref PowertoolsLayer
-
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: False positive. This is being deployed in a VPC by specifying the VpcConfig parameters.
 Outputs:
   GraphLoadStagingBucket:
     Description: "Bucket for staging graph load files"
     Value: !Ref GraphLoadStagingBucket
-  GraphLoadQueue:
-    Description: "Bucket for staging graph load files"
+  GraphLoadQueueName:
+    Description: "Queue for triggering graph loading (name)"
     Value: !GetAtt GraphLoadQueue.QueueName
-
+  GraphLoadQueueArn:
+    Description: "Queue for triggering graph loading (arn)"
+    Value: !GetAtt GraphLoadQueue.Arn
+    

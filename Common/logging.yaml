@@ -1,4 +1,6 @@
-Description:  This template deploys an S3 bucket
+AWSTemplateFormatVersion: 2010-09-09
+
+Description:  This template deploys an S3 bucket for logging
 
 Resources:
   Bucket:
@@ -15,6 +17,11 @@ Resources:
         RestrictPublicBuckets: True
       VersioningConfiguration:
         Status: Enabled
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W35
+            reason: This S3 bucket is the logging bucket
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -23,6 +30,23 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
+          - Action:
+              - 's3:PutObject'
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref Bucket
+                - /*
+            Condition:
+              ArnLike:
+                'aws:SourceArn': !GetAtt 
+                  - Bucket
+                  - Arn
+              StringEquals:
+                'aws:SourceAccount': !Sub '${AWS::AccountId}'        
           - Action:
               - 's3:GetObject'
             Effect: Deny
@@ -38,6 +62,6 @@ Resources:
 
 Outputs:
   BucketName:
-    Description: The name of the bucket
+    Description: Logging bucket
     Value: !Ref Bucket
 
