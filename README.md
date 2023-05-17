@@ -2,7 +2,7 @@
 
 ### Purpose
 
-Customers are eager to explore and comprehend their data from new perspectives. Unstructured data, such as text and video, is rich with information that can deliver valuable insights. Ingesting this data is easy using AWS services. This repository contains the necessary resources for deploying a Graph ETL stack using AWS Serverless Application Model (SAM). The deployed stack consists of an event-driven, stateful orchestration of tasks to process incoming video and text data. Specifically, when a new object is added to the Amazon S3 ingestion bucket, the `PutObject` event initiates an AWS Step Function. The AWS Step Function orchestrates a series of AWS Lambda Functions that perform feature extraction using Amazon Rekognition and Amazon Comprehend. The extracted data is then transformed and loaded into an Amazon Neptune graph for further analysis.
+Customers are eager to explore and comprehend their data from new perspectives. Unstructured data, such as text and video, is rich with information that can deliver valuable insights. Ingesting this data is easy using AWS services. This repository contains the necessary resources for deploying a Graph ETL stack using AWS Serverless Application Model (SAM). The deployed stack consists of an event-driven, stateful orchestration of tasks to process incoming video and text data. Specifically, when a new object is added to the Amazon S3 ingestion bucket, the `PutObject` event initiates an AWS Step Function. The AWS Step Function orchestrates a series of AWS Lambda Functions that perform feature extraction using Amazon Rekognition. The extracted data is then transformed and loaded into an Amazon Neptune graph for further analysis.
 
 ## Overview
 
