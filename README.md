@@ -37,7 +37,7 @@ Also see the [draw.io](https://drawio-app.com/) diagram in the `assets` director
 
 1. Clone this repository:
 ```bash
-git clone https://gitlab.aws.dev/famestad/GraphETL .
+git clone https://github.com/aws-samples/etl-into-amazon-neptune-graph
 cd GraphETL
 ```
 
