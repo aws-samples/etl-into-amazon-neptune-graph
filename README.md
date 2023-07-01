@@ -35,9 +35,9 @@ The solution consists of the following components:
 Two AWS Step Functions orchestrate a set of AWS Lambda Functions to first extract the entities from the video, and then load them into a graph on Amazon Neptune. The functions make use of asynchronous calls to avoid any limitations for processing times.
 
 <p style="text-align:center">
-    <img src="Assets/state_machine_load_graph.png" height=350px/>
-    <span style="width:10px">&nbsp;</span>
     <img src="Assets/state_machine_rekognition.png" height=350px/>
+    <span style="width:10px">&nbsp;</span>
+    <img src="Assets/state_machine_load_graph.png" height=350px/>
 </p>
 
 For more details see the [draw.io](https://drawio-app.com/) diagram as well as the flow diagram for the Step Functions in the `Assets` directory.
